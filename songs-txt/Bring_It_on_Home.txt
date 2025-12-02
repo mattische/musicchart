@@ -1,0 +1,16 @@
+Title: Bring It on Home
+Key: F
+Meter: 4/4
+Style: 6/8 stuk Fats
+$Artist: Animals
+
+IN:
+  // PIANO 1:an
+  1 5 1 5
+
+RUNDA:
+  1 5 1  4 * 1_5 4_5 1_4 1_5
+
+OUT:
+  //typ
+  1_4 1_4 1_4 1_4

@@ -1,0 +1,28 @@
+Title: Return To Sender
+Key: F
+Meter: 4/4
+Style: WB
+$Artist: Elvis
+
+IN:
+  // upp Sax
+  1 6- 2- 5
+
+V:
+  1 6- 2- 5@wu * 1 6- 2-.._5.. 1!
+
+C1:
+  4 5 4 5@wu * 4 5 1 1@wd
+  4 5 4 5@wu * 2 2 2 5!
+
+V:
+
+C2:
+  4 5 4 5@wu * 4 5 1 1@wd
+  4 4 1 1 * 2 2 5!
+
+C1:
+  4 5 4 5@wu * 4 5 1 1@wd 
+  
+  //fade 
+  ||: 4 5 4 5 :|| 

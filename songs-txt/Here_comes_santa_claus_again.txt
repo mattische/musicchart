@@ -1,0 +1,35 @@
+Title: Here comes santa claus again
+Key: D
+Meter: 4/4
+Tempo: 100 bpm
+Style: Shuffle lite struttig elbas
+$Artist: playtones
+$Arranger: Your name
+    
+IN:
+  //PIANO börjar upptakt 1
+  5 5 1 1_5
+
+V:
+ ||: 1 4 5 1 
+  1 4 5 (5..) * 1  1_5@wu :||
+
+C:
+    4 1 5 1 
+    4 1 2 (2..) * <5>_<5> 5_4_3_2
+
+V:
+  /*
+  REP - solo + sång
+  */
+
+C:
+
+
+V:
+  1 4 5 1 
+  1 4 5 (51) 
+  //OUT:
+  5 (51) 5 5
+  1 4 1 <1>
+

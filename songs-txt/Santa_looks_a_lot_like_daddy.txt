@@ -1,0 +1,32 @@
+Title: Santa looks a lot like daddy
+Key: F
+Meter: 4/4
+Style: 1155 1155
+$Artist: playtones
+
+    
+IN:
+  //Konstigt med steel/gura
+  1 1 1 1._x.._<1><
+
+C/V:
+  1 1 1 4 * 5 5 5 1@wd
+  1 1 1 4 * 5 5 5 1._x.._<1><
+V/C:
+ 1 1 1 4 * 5 5 5 1@wd
+ 1 1 1 4 * 5 5 5 1._x.._<1><
+
+V:
+/*
+GURA SOLO
+*/
+
+V/C:
+  1 1 1 4 * 5 5 5 1@wd
+  1 1 1 4 * 5 5 5 1._x.._<1><mod+2
+
+V/C:
+  1 1 1 4 * 5 5 5 1@wd
+  1 1 1 4 * 5 5 5 1
+OUT:
+  5 5 5 1 * 5 5 5 1 * 1 <1>

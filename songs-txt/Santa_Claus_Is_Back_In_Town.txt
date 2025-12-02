@@ -1,0 +1,19 @@
+Title: Santa Claus Is Back In Town
+Key: Bb
+Meter: 4/4
+Style: bluesig
+$Artist: Elvis
+
+    
+IN:
+  //förelsår att Boppin börjar i grundtonarten
+
+  
+
+
+RUNDA:
+  //12:a
+  1 1 1 1 * 4 4 1 1
+  5 5 1 1
+<1> <1> X X * 4 4 1 1
+5 5 1 1

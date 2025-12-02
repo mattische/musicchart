@@ -1,0 +1,14 @@
+Title: Shake Rattle & Roll
+Key: C
+Meter: 4/4
+Style: WB
+$Artist: Jerry Lee
+
+    
+IN:
+  // PIANO grejar och håller på
+  1 1 1 1
+
+RUNDA:
+  //12:a
+  1 1 1 1 * 4 4 1 1 * 5 4 1 1 

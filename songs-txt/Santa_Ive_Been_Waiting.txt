@@ -1,0 +1,36 @@
+Title: Santa Ive Been Waiting
+Key: A
+Meter: 4/4
+Style: Struttig tight elbas
+$Artist: Joakim Wall
+
+    
+IN:
+  /* GURA 4, UPP VIRVEL */
+
+V:
+  1 1 1 1 * 1 1 1 1
+  4 4 4 4 * 1 1 1 1
+  5 5 1! X X 
+  //1:_____________________________________  
+  1 1 1 1
+
+
+V:
+ //OBS EJ ending 1 
+
+C:
+  1 1 1 1 * 5 5 1 1
+  1 1 1 1 * 5 5 1 1
+  5 5 1 1 * 5 5 1 1
+
+V: 
+  //EJ ENDING 1
+C:
+  //+sista 4:
+    5 5 1 1!
+
+OUT:
+  1 1 1 1 
+
+

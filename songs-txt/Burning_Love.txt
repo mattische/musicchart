@@ -1,0 +1,31 @@
+Title: Burning Love
+Key: C
+Meter: 4/4
+Style: EB - 70ies busy
+$Artist: Elvis
+
+    
+IN:
+  //GURA 1, GURA + PIANO 1, GURA + PIANO + BAS
+  X X X..._1. 1  
+
+V:
+  ||: 1 4_5 1 1 :||{4}
+
+C:
+  6-_5 4 6-_5 4 * 6-_5 4@wd
+
+V+C:
+
+mellanspel:
+1 1
+
+C:
+ //SOLO 
+
+V+C:
+
+  OUT:
+    ||: 1 4 1 4 :|| 
+    ||: 1 4 1 4 :|| 
+    //FADE

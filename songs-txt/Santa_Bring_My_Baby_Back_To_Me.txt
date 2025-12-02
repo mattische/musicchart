@@ -1,0 +1,34 @@
+Title: Santa Bring My Baby Back To Me
+Key: C
+Meter: 4/4
+Style: SS
+$Artist: Refreshments - Johan B
+
+    
+IN:
+  /* UPP VIRVEL*/
+ 1 1 1 1 
+
+V:
+  1 1 4 1 * 4 4 1 1
+  5 5 4 5 * 1 1@wu
+
+
+C:
+  //WB
+  4 4 1 1 * 2 2 5! X * 5_4_3_2
+
+V:
+
+C:
+  //WB INGA BREAK gura solo
+V:
+  //WALKING piano solo
+
+C:
+V:
+
+OUT:
+  1 1 1 1!
+  5 5 4 5 * 1 1 1._X._1_X.
+

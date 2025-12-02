@@ -1,0 +1,31 @@
+Title: WHITE X-MAS
+Key: C
+Meter: 4/4
+Style: Wb soft
+$Artist: Refreshments - Johan B
+
+    
+IN:
+  /* PIANO HÅLLER PÅ, SEDAN UPPTAKT*/
+ 1 1 
+
+A:
+  1 1_#1 2- 5..._#4. * 4 4_5 1 2_5 
+  1 1 4 4- * 1 6- 2- 5
+
+B:
+  1 1_#1 2- 5..._#4. * 4 4_5 1 2_5 
+  1 1 4 4- * 1_6 2_5 1 2_5
+
+B:
+  /* PIANO SOLO */
+
+C:
+  1 1_#1 2- 5..._#4. * 4 4_5 1 2_5 
+  1 1 4 4- * 1_6 2_5 1 1
+
+OUT:
+  1 1 <4> X X
+
+/* UPPTAKT SÅNG*/
+2@wd 5@wd <1>

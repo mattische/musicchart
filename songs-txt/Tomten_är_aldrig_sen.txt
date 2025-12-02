@@ -1,0 +1,32 @@
+Title: Tomten är aldrig sen
+Key: A
+Meter: 4/4
+Style: Shuffle KB attityd
+$Artist: playtones
+
+    
+IN:
+  //UPP VIRVEL
+  1 1 1 1
+
+V:
+  1 1 1 1 * 4 4 1 1
+  5 5 1 1
+C:
+ ||: 1 1 1 1 * 5 5 5 5 :||
+
+V:
+
+C:
+
+C:
+  /*
+  PIANO SOLO X 2
+  */
+
+V:
+
+C:
+
+OUT:
+  1 1._X_<1><
