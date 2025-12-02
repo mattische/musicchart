@@ -1,4 +1,4 @@
-import { Chord, Section, Measure, MeasureLine, SongMetadata } from '../types/song';
+import { Chord, Section, Measure, SongMetadata } from '../types/song';
 
 export interface ParsedLine {
   type: 'section' | 'measures' | 'empty' | 'metadata';
@@ -57,7 +57,7 @@ export function parseChordTextWithMetadata(text: string, nashvilleMode: boolean)
             comment: multiLineCommentText,
           };
           currentSection.measures.push(commentMeasure);
-          currentSection.measureLines.push({
+          currentSection.measureLines?.push({
             id: `line-comment-${Date.now()}-${lineIndex}`,
             measures: [commentMeasure],
           });
@@ -86,7 +86,7 @@ export function parseChordTextWithMetadata(text: string, nashvilleMode: boolean)
             comment: multiLineCommentText,
           };
           currentSection.measures.push(commentMeasure);
-          currentSection.measureLines.push({
+          currentSection.measureLines?.push({
             id: `line-comment-${Date.now()}-${lineIndex}`,
             measures: [commentMeasure],
           });
@@ -115,7 +115,7 @@ export function parseChordTextWithMetadata(text: string, nashvilleMode: boolean)
           comment: commentText,
         };
         currentSection.measures.push(commentMeasure);
-        currentSection.measureLines.push({
+        currentSection.measureLines?.push({
           id: `line-comment-${Date.now()}-${lineIndex}`,
           measures: [commentMeasure],
         });
@@ -195,7 +195,7 @@ export function parseChordTextWithMetadata(text: string, nashvilleMode: boolean)
       sections.push(currentSection);
       const { measures, isRepeat, repeatMultiplier } = parseMeasureLine(trimmed, nashvilleMode);
       currentSection.measures.push(...measures);
-      currentSection.measureLines.push({
+      currentSection.measureLines?.push({
         id: `line-${Date.now()}-${lineIndex}`,
         measures,
         isRepeat,

@@ -8,7 +8,7 @@ interface ChordTextOutputProps {
   fitToPage?: boolean;
 }
 
-export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout = false, fitToPage = false }: ChordTextOutputProps) {
+export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout = false }: ChordTextOutputProps) {
   const hasMetadata = song.metadata.title || song.metadata.tempo || song.metadata.timeSignature ||
                       song.metadata.style || song.metadata.feel ||
                       (song.metadata.customProperties && Object.keys(song.metadata.customProperties).length > 0);
@@ -69,7 +69,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
   };
 
   // Function to render a single section
-  const renderSection = (section: typeof song.sections[0], index: number) => {
+  const renderSection = (section: typeof song.sections[0]) => {
     // Check if this is a default/auto-generated section name
     const isDefaultSection = section.name === 'Section' || /^Section\s+\d+$/.test(section.name);
 
@@ -98,7 +98,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
 
                   {/* Measures on this line */}
                   <div className="flex gap-6 items-end flex-wrap">
-                    {line.measures.map((measure, measureIdx) => (
+                    {line.measures.map((measure) => (
                       <div key={measure.id} className="flex gap-3 items-end">
                         {/* Inline meter change */}
                         {measure.meterChange && (
@@ -206,10 +206,9 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
   };
 
   // Helper to render sections
-  const renderSectionsWithPageBreaks = (sections: typeof song.sections, startIndex: number = 0) => {
-    return sections.map((section, idx) => {
-      const globalIndex = startIndex + idx;
-      return renderSection(section, globalIndex);
+  const renderSectionsWithPageBreaks = (sections: typeof song.sections) => {
+    return sections.map((section) => {
+      return renderSection(section);
     });
   };
 
@@ -224,10 +223,10 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
         <MetadataDisplay />
         <div className="grid grid-cols-2 gap-8 print:gap-6">
           <div>
-            {renderSectionsWithPageBreaks(leftSections, 0)}
+            {renderSectionsWithPageBreaks(leftSections)}
           </div>
           <div className="border-l-2 border-gray-300 pl-8 print:pl-6 print:border-gray-400">
-            {renderSectionsWithPageBreaks(rightSections, midPoint)}
+            {renderSectionsWithPageBreaks(rightSections)}
           </div>
         </div>
       </>

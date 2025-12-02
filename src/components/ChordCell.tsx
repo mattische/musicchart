@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Chord, NoteAnnotation, NoteValue } from '../types/song';
+import { Chord, NoteValue } from '../types/song';
 import { nashvilleToChord, chordToNashville } from '../utils/chordConverter';
 
 interface ChordCellProps {
@@ -92,12 +92,12 @@ export default function ChordCell({
 
   const noteSymbol = (value: NoteValue) => {
     switch (value) {
-      case '1': return '𝅝'; // Whole note
-      case '2': return '𝅗𝅥'; // Half note
-      case '4': return '♩'; // Quarter note
-      case '8': return '♪'; // Eighth note
-      case '16': return '𝅘𝅥𝅯'; // Sixteenth note
-      case '32': return '𝅘𝅥𝅰'; // Thirty-second note
+      case 'w': return '𝅝'; // Whole note
+      case 'h': return '𝅗𝅥'; // Half note
+      case 'q': return '♩'; // Quarter note
+      case 'e': return '♪'; // Eighth note
+      case 's': return '𝅘𝅥𝅯'; // Sixteenth note
+      case 't': return '𝅘𝅥𝅰'; // Thirty-second note
       default: return '';
     }
   };
@@ -161,36 +161,36 @@ export default function ChordCell({
       <div className="absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 p-2 flex flex-col space-y-1">
         <div className="text-xs text-gray-600 mb-1">Note value:</div>
         <button
-          onClick={() => toggleNoteValue('4')}
+          onClick={() => toggleNoteValue('q')}
           className={`text-xl hover:bg-blue-100 px-2 py-1 rounded ${
-            chord.annotation?.value === '4' ? 'bg-blue-200' : ''
+            chord.annotation?.value === 'q' ? 'bg-blue-200' : ''
           }`}
           title="Quarter note"
         >
           ♩
         </button>
         <button
-          onClick={() => toggleNoteValue('8')}
+          onClick={() => toggleNoteValue('e')}
           className={`text-xl hover:bg-blue-100 px-2 py-1 rounded ${
-            chord.annotation?.value === '8' ? 'bg-blue-200' : ''
+            chord.annotation?.value === 'e' ? 'bg-blue-200' : ''
           }`}
           title="Eighth note"
         >
           ♪
         </button>
         <button
-          onClick={() => toggleNoteValue('2')}
+          onClick={() => toggleNoteValue('h')}
           className={`text-xl hover:bg-blue-100 px-2 py-1 rounded ${
-            chord.annotation?.value === '2' ? 'bg-blue-200' : ''
+            chord.annotation?.value === 'h' ? 'bg-blue-200' : ''
           }`}
           title="Half note"
         >
           𝅗𝅥
         </button>
         <button
-          onClick={() => toggleNoteValue('1')}
+          onClick={() => toggleNoteValue('w')}
           className={`text-xl hover:bg-blue-100 px-2 py-1 rounded ${
-            chord.annotation?.value === '1' ? 'bg-blue-200' : ''
+            chord.annotation?.value === 'w' ? 'bg-blue-200' : ''
           }`}
           title="Whole note"
         >
