@@ -6,9 +6,21 @@ interface ChordTextOutputProps {
   nashvilleMode: boolean;
   twoColumnLayout?: boolean;
   fitToPage?: boolean;
+  fontSize?: string;
 }
 
-export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout = false }: ChordTextOutputProps) {
+const getFontSizeClass = (size: string) => {
+  switch (size) {
+    case 'small': return 'text-base';
+    case 'normal': return 'text-2xl';
+    case 'medium': return 'text-3xl';
+    case 'big': return 'text-4xl';
+    default: return 'text-2xl';
+  }
+};
+
+export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout = false, fontSize = 'normal' }: ChordTextOutputProps) {
+  const fontClass = getFontSizeClass(fontSize);
   const hasMetadata = song.metadata.title || song.metadata.tempo || song.metadata.timeSignature ||
                       song.metadata.style || song.metadata.feel ||
                       (song.metadata.customProperties && Object.keys(song.metadata.customProperties).length > 0);
@@ -132,6 +144,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                                       chord={chord}
                                       nashvilleMode={nashvilleMode}
                                       songKey={song.metadata.key}
+                                      fontSize={fontClass}
                                     />
                                   ))}
                                   {measure.comment && (
@@ -181,6 +194,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                           chord={chord}
                           nashvilleMode={nashvilleMode}
                           songKey={song.metadata.key}
+                          fontSize={fontClass}
                         />
                       ))}
                       {measure.comment && (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Song } from './types/song';
 import Toolbar from './components/Toolbar';
 import ChordTextEditor from './components/ChordTextEditor';
@@ -8,6 +8,7 @@ function App() {
   const [nashvilleMode, setNashvilleMode] = useState(true);
   const [twoColumnLayout, setTwoColumnLayout] = useState(false);
   const [fitToPage, setFitToPage] = useState(false);
+  const [fontSize, setFontSize] = useState('normal');
   const [song, setSong] = useState<Song>({
     id: 'new-song',
     metadata: {
@@ -33,6 +34,20 @@ function App() {
     updatedAt: new Date(),
   });
 
+  // Load saved song from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('musicchart_current');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        // We'll let the ChordTextEditor handle parsing the text
+        console.log('Loaded saved chart:', data.metadata?.title);
+      } catch (e) {
+        console.error('Failed to load saved chart', e);
+      }
+    }
+  }, []);
+
   const updateSong = (updatedSong: Song) => {
     setSong(updatedSong);
   };
@@ -46,6 +61,8 @@ function App() {
         onToggleTwoColumn={() => setTwoColumnLayout(!twoColumnLayout)}
         fitToPage={fitToPage}
         onToggleFitToPage={() => setFitToPage(!fitToPage)}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
         song={song}
         onNewSong={() => {
           setSong({
@@ -84,6 +101,7 @@ function App() {
             nashvilleMode={nashvilleMode}
             twoColumnLayout={twoColumnLayout}
             fitToPage={fitToPage}
+            fontSize={fontSize}
             onUpdate={updateSong}
           />
         </div>

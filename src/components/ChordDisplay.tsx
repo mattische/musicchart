@@ -5,9 +5,10 @@ interface ChordDisplayProps {
   chord: Chord;
   nashvilleMode: boolean;
   songKey: string;
+  fontSize?: string;
 }
 
-export default function ChordDisplay({ chord, nashvilleMode, songKey }: ChordDisplayProps) {
+export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize = 'text-2xl' }: ChordDisplayProps) {
   // Handle separator (*)
   if (chord.number === '*') {
     return (
@@ -21,7 +22,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey }: ChordDis
   if (chord.isRest || chord.number === 'X' || chord.number.startsWith('X_')) {
     return (
       <div className="relative inline-flex flex-col items-center min-w-[40px]">
-        <span className="text-2xl font-bold text-black">{chord.number}</span>
+        <span className={`${fontSize} font-bold text-black`}>{chord.number}</span>
       </div>
     );
   }
@@ -145,7 +146,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey }: ChordDis
           </span>
         ) : (
           <span
-            className="text-2xl font-bold text-black"
+            className={`${fontSize} font-bold text-black`}
             style={{
               borderBottom: hasUnderline ? '2px solid black' : '2px solid transparent',
               display: 'inline-block',
@@ -158,17 +159,17 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey }: ChordDis
 
         {/* Tie (=) - directly after chord */}
         {chord.tie && (
-          <span className="text-black font-bold text-2xl ml-0.5">=</span>
+          <span className={`text-black font-bold ${fontSize} ml-0.5`}>=</span>
         )}
 
         {/* Accent mark (!) - directly after chord */}
         {chord.accent && (
-          <span className="text-black font-bold text-2xl ml-0.5">!</span>
+          <span className={`text-black font-bold ${fontSize} ml-0.5`}>!</span>
         )}
 
         {/* Walk indicators (@wd/@wu) - directly after chord */}
         {chord.walk && (
-          <span className="text-black font-bold text-xl ml-0.5">
+          <span className={`text-black font-bold ${fontSize} ml-0.5`}>
             {chord.walk === 'down' ? '↘' : '↗'}
           </span>
         )}

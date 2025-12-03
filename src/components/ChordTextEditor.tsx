@@ -8,10 +8,11 @@ interface ChordTextEditorProps {
   nashvilleMode: boolean;
   twoColumnLayout: boolean;
   fitToPage: boolean;
+  fontSize: string;
   onUpdate: (song: Song) => void;
 }
 
-export default function ChordTextEditor({ song, nashvilleMode, twoColumnLayout, fitToPage, onUpdate }: ChordTextEditorProps) {
+export default function ChordTextEditor({ song, nashvilleMode, twoColumnLayout, fitToPage, fontSize, onUpdate }: ChordTextEditorProps) {
   const [text, setText] = useState(() => sectionsToChordText(song.sections));
 
   // Update text when song changes externally (e.g., new song)
@@ -116,6 +117,7 @@ CHORUS:
             nashvilleMode={nashvilleMode}
             twoColumnLayout={twoColumnLayout}
             fitToPage={fitToPage}
+            fontSize={fontSize}
           />
         </div>
       </div>
