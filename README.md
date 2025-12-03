@@ -1,15 +1,15 @@
 # MusicChart
 
-A Progressive Web App for writing music charts using the Nashville Number System with JotChord syntax.
+This is for writing music charts on the go.
+Using the Nashville Number System with JotChord syntax.
 
 ## Features
 
 - Text-based editor with JotChord syntax
-- Nashville Number System (1-7) with chord name conversion
-- Two-column layout option
+- NNS (1-7) with chord name conversion
 - PWA support for offline use
 - Responsive design
-- PDF export via print
+- PDF export
 - Local storage persistence
 
 ## Installation
@@ -17,14 +17,13 @@ A Progressive Web App for writing music charts using the Nashville Number System
 ### Local development
 
 ```bash
-# Clone the repository
-git clone https://github.com/mattische/musicchart.git
+# Clone this repo
 cd musicchart
 
-# Install dependencies
+# dependencies
 npm install
 
-# Start development server
+# dev server
 npm run dev
 ```
 
@@ -118,39 +117,14 @@ b7       → Flat seven
 1/*inline*/            → Inline comment
 ```
 
-## Nashville Number System
 
-The Nashville Number System uses scale degrees instead of chord names, making it easy to transpose songs.
-
-**Example in C major:**
-- 1 = C
-- 2- = Dm
-- 3- = Em
-- 4 = F
-- 5 = G
-- 6- = Am
-- 7o = Bdim
-
-**Same song in G major:**
-- 1 = G
-- 2- = Am
-- 3- = Bm
-- 4 = C
-- 5 = D
-- 6- = Em
-- 7o = F#dim
-
-## Tech Stack
+## Stack
 
 - React 18
 - TypeScript
 - Vite
 - Tailwind CSS
 - Vite PWA Plugin
-
-## Contributing
-
-Contributions are welcome. Open an issue or submit a pull request.
 
 ## License
 

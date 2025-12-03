@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Song } from './types/song';
+import { parseChordTextWithMetadata } from './utils/jotChordParser';
 import Toolbar from './components/Toolbar';
 import ChordTextEditor from './components/ChordTextEditor';
 import PrintHeader from './components/PrintHeader';
@@ -34,22 +35,28 @@ function App() {
     updatedAt: new Date(),
   });
 
-  // Load saved song from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('musicchart_current');
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        // We'll let the ChordTextEditor handle parsing the text
-        console.log('Loaded saved chart:', data.metadata?.title);
-      } catch (e) {
-        console.error('Failed to load saved chart', e);
-      }
-    }
-  }, []);
 
   const updateSong = (updatedSong: Song) => {
     setSong(updatedSong);
+  };
+
+  const handleLoadFile = (text: string) => {
+    const result = parseChordTextWithMetadata(text, nashvilleMode);
+    setSong({
+      id: `loaded-${Date.now()}`,
+      metadata: {
+        title: result.metadata?.title || 'Untitled',
+        key: result.metadata?.key || 'C',
+        tempo: result.metadata?.tempo,
+        timeSignature: result.metadata?.timeSignature,
+        style: result.metadata?.style,
+        feel: result.metadata?.feel,
+        customProperties: result.metadata?.customProperties,
+      },
+      sections: result.sections,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   };
 
   return (
@@ -66,30 +73,17 @@ function App() {
         song={song}
         onNewSong={() => {
           setSong({
-            id: 'new-song',
+            id: `new-${Date.now()}`,
             metadata: {
-              title: 'Untitled Song',
+              title: 'Untitled',
               key: 'C',
-              tempo: 120,
-              timeSignature: '4/4',
             },
-            sections: [
-              {
-                id: 'section-1',
-                name: 'Verse 1',
-                measures: [
-                  {
-                    id: 'measure-1',
-                    chords: [],
-                    rawText: '',
-                  },
-                ],
-              },
-            ],
+            sections: [],
             createdAt: new Date(),
             updatedAt: new Date(),
           });
         }}
+        onLoadFile={handleLoadFile}
       />
 
       <div className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">

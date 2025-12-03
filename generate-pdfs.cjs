@@ -37,12 +37,21 @@ async function generatePDF(songFile) {
     await page.evaluate((content) => {
       const textarea = document.querySelector('textarea');
       textarea.value = content;
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-      textarea.dispatchEvent(new Event('change', { bubbles: true }));
+      // Trigger React's onChange handler
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+      nativeInputValueSetter.call(textarea, content);
+      const event = new Event('input', { bubbles: true });
+      textarea.dispatchEvent(event);
     }, songContent);
 
-    // Wait for rendering to complete
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Wait for content to be rendered in the preview
+    await page.waitForFunction(() => {
+      const preview = document.querySelector('.bg-white.rounded-lg.shadow-md.p-6.print\\:shadow-none');
+      return preview && preview.textContent.trim().length > 100;
+    }, { timeout: 10000 });
+
+    // Extra wait for all rendering to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Generate PDF
     const pdfFilename = `${title.replace(/[/\\?%*:|"<>]/g, '-')} - ${key}.pdf`;

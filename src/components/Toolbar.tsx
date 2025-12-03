@@ -10,6 +10,7 @@ interface ToolbarProps {
   onToggleFitToPage: () => void;
   song: Song;
   onNewSong: () => void;
+  onLoadFile: (text: string) => void;
   fontSize: string;
   onFontSizeChange: (size: string) => void;
 }
@@ -23,18 +24,70 @@ export default function Toolbar({
   onToggleFitToPage,
   song,
   onNewSong,
+  onLoadFile,
   fontSize,
   onFontSizeChange
 }: ToolbarProps) {
-  const handleSave = () => {
-    const chartText = sectionsToChordText(song.sections);
-    const savedData = {
-      text: chartText,
-      metadata: song.metadata,
-      timestamp: new Date().toISOString()
+  const handleLoadFile = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.txt';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const text = event.target?.result as string;
+          onLoadFile(text);
+        };
+        reader.readAsText(file);
+      }
     };
-    localStorage.setItem('musicchart_current', JSON.stringify(savedData));
-    alert(`Saved: ${song.metadata.title || 'Untitled'}`);
+    input.click();
+  };
+
+  const handleSaveTxt = () => {
+    let chartText = '';
+
+    // Add metadata
+    if (song.metadata.title) {
+      chartText += `Title: ${song.metadata.title}\n`;
+    }
+    if (song.metadata.key) {
+      chartText += `Key: ${song.metadata.key}\n`;
+    }
+    if (song.metadata.tempo) {
+      chartText += `Tempo: ${song.metadata.tempo}\n`;
+    }
+    if (song.metadata.timeSignature) {
+      chartText += `Meter: ${song.metadata.timeSignature}\n`;
+    }
+    if (song.metadata.style) {
+      chartText += `Style: ${song.metadata.style}\n`;
+    }
+    if (song.metadata.feel) {
+      chartText += `Feel: ${song.metadata.feel}\n`;
+    }
+    if (song.metadata.customProperties) {
+      Object.entries(song.metadata.customProperties).forEach(([key, value]) => {
+        chartText += `$${key}: ${value}\n`;
+      });
+    }
+
+    if (chartText) {
+      chartText += '\n';
+    }
+
+    // Add sections
+    chartText += sectionsToChordText(song.sections);
+
+    const blob = new Blob([chartText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${song.metadata.title || 'chart'}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleExportPDF = () => {
@@ -67,10 +120,16 @@ export default function Toolbar({
               New
             </button>
             <button
-              onClick={handleSave}
+              onClick={handleLoadFile}
               className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
             >
-              Save
+              Load
+            </button>
+            <button
+              onClick={handleSaveTxt}
+              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
+            >
+              Txt
             </button>
             <button
               onClick={handleExportPDF}

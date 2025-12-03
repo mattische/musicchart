@@ -660,16 +660,43 @@ export function sectionsToChordText(sections: Section[]): string {
     // Section header
     lines.push(`${section.name}:`);
 
-    // Measures - one per line (or use rawText if available)
-    section.measures.forEach((measure) => {
-      let text = measure.rawText || chordsToText(measure.chords);
-      if (measure.comment) {
-        text = text ? `${text} //${measure.comment}` : `//${measure.comment}`;
-      }
-      if (text) {
-        lines.push('    ' + text);
-      }
-    });
+    // Use measureLines if available to preserve line structure
+    if (section.measureLines && section.measureLines.length > 0) {
+      section.measureLines.forEach((line) => {
+        let lineText = '';
+
+        // Handle repeat notation
+        if (line.isRepeat) {
+          const measuresText = line.measures.map(m => m.rawText || chordsToText(m.chords)).join(' ');
+          const multiplier = line.repeatMultiplier ? `{${line.repeatMultiplier}}` : '';
+          lineText = `  ||: ${measuresText} :||${multiplier}`;
+        } else {
+          // Regular line - join all measures with space
+          lineText = '  ' + line.measures.map((measure) => {
+            let text = measure.rawText || chordsToText(measure.chords);
+            if (measure.comment) {
+              text = text ? `${text} //${measure.comment}` : `//${measure.comment}`;
+            }
+            return text;
+          }).filter(t => t).join(' ');
+        }
+
+        if (lineText.trim()) {
+          lines.push(lineText);
+        }
+      });
+    } else {
+      // Fallback to old format if no measureLines
+      section.measures.forEach((measure) => {
+        let text = measure.rawText || chordsToText(measure.chords);
+        if (measure.comment) {
+          text = text ? `${text} //${measure.comment}` : `//${measure.comment}`;
+        }
+        if (text) {
+          lines.push('  ' + text);
+        }
+      });
+    }
 
     return lines.join('\n');
   }).join('\n\n');
