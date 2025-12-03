@@ -3,18 +3,13 @@
 This is for writing music charts on the go.
 Using the Nashville Number System with JotChord syntax.
 
-## Features
-
 - Text-based editor with JotChord syntax
 - NNS (1-7) with chord name conversion
 - PWA support for offline use
-- Responsive design
 - PDF export
-- Local storage persistence
+- A cli tool to generate charts from txt to pdf
 
-## Installation
-
-### Local development
+## Installation, use locally
 
 ```bash
 # Clone this repo
@@ -27,9 +22,9 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`
+follow the url shown in the terminal
 
-### Build for production
+### Build 
 
 ```bash
 npm run build
@@ -50,9 +45,10 @@ The editor uses JotChord syntax. Write chord charts in the left panel and see th
 ```
 Title: Song Name
 Key: C
-Tempo: 120
+Tempo: 180
 Meter: 4/4
 Style: Rock
+Feel: Swing
 $Artist: Artist Name
 ```
 
@@ -117,6 +113,50 @@ b7       → Flat seven
 1/*inline*/            → Inline comment
 ```
 
+## CLI tool for pdf generation
+
+  Generate PDFs from `.txt` chord chart files using the cli script.
+
+  Example files is located in ```songs-txt``` and in ```pdfs``` directories.
+
+  ### Requirements
+
+  The dev server must be running, so you must first clone this repo and install requirements.
+  
+  Then:
+
+  ```bash
+  npm run dev
+
+  Basic Usage
+
+  # Generate pdf's with default settings (fit-to-page enabled)
+  # Looks for a directory named 'songs-txt' with .txt files with charts
+  node generate-pdfs.mjs
+
+  # Use a different input directory
+  node generate-pdfs.mjs ./my-songs
+
+  # View all options
+  node generate-pdfs.mjs --help
+
+  Options
+
+  - --fit-to-page - Fit entire chart to one page (this is default!)
+  - --no-fit-to-page - Allow charts to span multiple pages
+  - --two-columns - Use two-column layout
+  - --font-size=SIZE - Set font size: small, normal, medium, big
+
+  Examples
+
+  # Multi-page charts with big font
+  node generate-pdfs.mjs --no-fit-to-page --font-size=big
+
+  # Two columns with small font
+  node generate-pdfs.mjs --two-columns --font-size=small
+
+  PDFs are saved to ./pdfs/ with filenames based on song metadata: "Song Title - Key.pdf"
+  ```
 
 ## Stack
 
