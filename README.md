@@ -1,162 +1,163 @@
-# MusicChart - Nashville Number System PWA
+# MusicChart
 
-En modern, enkel och kraftfull Progressive Web App för att skriva musikdiagram enligt Nashville Number System-standarden.
+A Progressive Web App for writing music charts using the Nashville Number System with JotChord syntax.
 
 ## Features
 
-⌨️ **Textbaserad Editor** - Skriv ackord snabbt med tangentbordet, precis som i ett dokument
-🎼 **Smart Syntax** - Använd punkter för beats (`1...`), utropstecken för accenter (`4!`)
-🔄 **Nashville ↔️ Chord Toggle** - Växla smidigt mellan Nashville Number (1-7) och vanliga ackordnamn (C, D, Em)
-⬅️➡️ **Tangentbordsnavigering** - Navigera mellan takter med piltangenter eller Enter
-📰 **Två-kolumn Layout** - Optimera för utskrift med två-kolumn vy
-💾 **PWA Support** - Installera som app på mobil, platta eller dator - fungerar offline
-📱 **Responsiv** - Fungerar perfekt på alla enheter
-🎹 **Komplett Metadata** - Titel, tonart, tempo, taktart
+- Text-based editor with JotChord syntax
+- Nashville Number System (1-7) with chord name conversion
+- Two-column layout option
+- PWA support for offline use
+- Responsive design
+- PDF export via print
+- Local storage persistence
 
 ## Installation
 
-### Lokal utveckling
+### Local development
 
 ```bash
-# Klona projektet
-git clone https://github.com/yourusername/musicchart.git
+# Clone the repository
+git clone https://github.com/mattische/musicchart.git
 cd musicchart
 
-# Installera dependencies
+# Install dependencies
 npm install
 
-# Starta utvecklingsserver
+# Start development server
 npm run dev
 ```
 
-Appen körs nu på `http://localhost:5173`
+Open `http://localhost:5173`
 
-### Build för produktion
+### Build for production
 
 ```bash
 npm run build
 ```
 
-### Deploy till GitHub Pages
+### Deploy to GitHub Pages
 
 ```bash
 npm run deploy
 ```
 
-## Användning
+## Usage
 
-1. **Skapa en ny låt**
-   - Fyll i metadata (titel, tonart, tempo, taktart)
-   - Lägg till sektioner (Verse, Chorus, Bridge, etc.)
+The editor uses JotChord syntax. Write chord charts in the left panel and see the rendered output in the right panel.
 
-2. **Skriv ackord med tangentbordet**
-   - Klicka i en takt och skriv direkt
-   - Exempel: `1 4 5 1` (fyra ackord)
-   - Använd **mellanslag** för att separera ackord
+### Metadata
 
-3. **Använd smart syntax**
-   ```
-   1...     → Ackord 1 med 3 beats (punkter = beats)
-   4!       → Ackord 4 med accent (!)
-   5-.      → Ackord 5 moll med 1 beat
-   2sus4!.. → Ackord 2sus4 med accent och 2 beats
-   ```
-
-4. **Navigera med tangentbordet**
-   - **→ / ←** : Flytta mellan takter (höger/vänster)
-   - **↑ / ↓** : Flytta upp/ner i kolumner
-   - **Enter** : Flytta till nästa takt nedåt
-   - **→** (sista takten): Skapar ny takt automatiskt
-
-5. **Växla mellan lägen**
-   - **Nashville (123)**: Använd siffror (1, 2-, 4, 5)
-   - **Chords (ABC)**: Se ackordnamn (C, Dm, F, G)
-   - Konverteras automatiskt baserat på vald tonart
-
-6. **Optimera för utskrift**
-   - Klicka **"2 Columns"** för två-kolumn layout
-   - Perfekt för att få hela låten på en sida
-
-7. **Spara och exportera**
-   - Spara: Lagras lokalt i webbläsaren (kommer snart)
-   - PDF: Exportera som PDF (kommer snart)
-
-## Tekniker
-
-- **React 18** - UI framework
-- **TypeScript** - Typsäkerhet
-- **Vite** - Build tool och dev server
-- **Tailwind CSS** - Styling
-- **Vite PWA Plugin** - Progressive Web App support
-- **IndexedDB** - Lokal datalagring (kommer snart)
-
-## Syntax-guide
-
-### Grundläggande ackord
 ```
-1        → Durackord på första skalsteget
-2-       → Mollackord på andra skalsteget (- eller m för moll)
-4sus4    → Sus4-ackord
-5**7     → Septimackord
-#5       → Höjd kvint (icke-diatonisk)
-b7       → Sänkt sjua
+Title: Song Name
+Key: C
+Tempo: 120
+Meter: 4/4
+Style: Rock
+$Artist: Artist Name
 ```
 
-### Beats och rytm
+### Sections
+
+```
+V1:
+    1 4 5 1
+    2- 5 1
+
+CHORUS:
+    4 5 6- 1
+    4 5 1
+```
+
+### Basic chords
+
+```
+1        → Major chord
+2-       → Minor chord (- or m)
+4sus4    → Sus4 chord
+5**7     → Seventh chord
+#5       → Sharp five
+b7       → Flat seven
+```
+
+### Rhythm notation
+
 ```
 1.       → 1 beat
 1..      → 2 beats
 1...     → 3 beats
-1....    → 4 beats
+<1>      → Diamond (whole note)
+1_6-     → Split bar
 ```
 
-### Accent marks
+### Annotations
+
 ```
-4!       → Accent på ackord 4
-1...!    → 3 beats med accent
+4!       → Accent
+1=       → Tie
+<1>~     → Fermata
+4e       → Eighth note
+1w       → Whole note
+2@wd     → Walk down
 ```
 
-### Kombinationer
+### Repeats
+
 ```
-1 4 5 1          → Fyra ackord, en takt per ackord
-1... 5           → Ackord 1 i 3 beats, sedan 5
-4! 5 1           → Accent på 4, sedan 5 och 1
-2-.. 5! 1.       → 2 moll (2 beats), 5 med accent, 1 (1 beat)
+||: 1 4 5 1 :||        → Standard repeat
+||: 1 4 :||{4}         → Repeat 4 times
+%                      → Multi-measure repeat
+1[2 4 5]               → Ending 1
+```
+
+### Comments
+
+```
+// Line comment
+/* Block comment */
+1/*inline*/            → Inline comment
 ```
 
 ## Nashville Number System
 
-Nashville Number System är ett sätt att skriva ackord baserat på skalsteg istället för specifika ackordnamn. Detta gör det enkelt att transponera låtar till olika tonarter.
+The Nashville Number System uses scale degrees instead of chord names, making it easy to transpose songs.
 
-**Exempel i C-dur:**
+**Example in C major:**
 - 1 = C
-- 2- = Dm (- betyder moll)
+- 2- = Dm
 - 3- = Em
 - 4 = F
 - 5 = G
 - 6- = Am
-- 7dim = Bdim
+- 7o = Bdim
 
-**Samma i G-dur:**
+**Same song in G major:**
 - 1 = G
 - 2- = Am
 - 3- = Bm
 - 4 = C
 - 5 = D
 - 6- = Em
-- 7dim = F#dim
+- 7o = F#dim
 
-## Bidra
+## Tech Stack
 
-Bidrag är välkomna! Öppna en issue eller skicka en pull request.
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- Vite PWA Plugin
 
-## Licens
+## Contributing
+
+Contributions are welcome. Open an issue or submit a pull request.
+
+## License
 
 MIT
 
 ## Inspiration
 
-Inspirerad av:
 - [1Chart](https://www.1chartapp.com/)
 - [JotChord](https://www.jotchord.com/)
 - [Nashville Numbers App](https://www.nashvillenumbersapp.com/)
