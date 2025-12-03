@@ -106,7 +106,12 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
 
                 {/* Repeat notation wrapper */}
                 <div className="flex items-end gap-2">
-                  {line.isRepeat && <span className="text-gray-600 text-xl font-bold self-end">||:</span>}
+                  {line.isRepeat && (
+                    <span className="text-gray-600 text-xl self-end">
+                      <span className="font-bold">|</span>
+                      <span className="font-normal">|:</span>
+                    </span>
+                  )}
 
                   {/* Measures on this line */}
                   <div className="flex gap-6 items-end flex-wrap">
@@ -174,7 +179,10 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                           {line.repeatMultiplier}×
                         </span>
                       )}
-                      <span className="text-gray-600 text-xl font-bold">:||</span>
+                      <span className="text-gray-600 text-xl">
+                        <span className="font-normal">:|</span>
+                        <span className="font-bold">|</span>
+                      </span>
                     </div>
                   )}
                 </div>
