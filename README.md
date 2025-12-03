@@ -117,6 +117,19 @@ b7       → Flat seven
 
   Generate PDFs from `.txt` chord chart files using the cli script.
 
+  > [!TIP]
+  >
+  >  *PAGE BREAKS:*
+  >
+  > Without --fit-to-page, a new page starts when content exceeds A4 height.
+  >
+  > Approximate line capacity per A4 page (in a txt-file):
+  >
+  > - Normal font: ~35-40 lines of chart content
+  > - Small font:  ~45-50 lines of chart content
+  > - Medium font: ~30-35 lines of chart content
+  > - Big font:    ~25-30 lines of chart content
+
   Example files is located in ```songs-txt``` and in ```pdfs``` directories.
 
   ### Requirements
