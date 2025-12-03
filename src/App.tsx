@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { Song } from './types/song';
 import { parseChordTextWithMetadata } from './utils/jotChordParser';
-import Toolbar from './components/Toolbar';
+import { Setlist } from './db/database';
+import NewToolbar from './components/NewToolbar';
 import ChordTextEditor from './components/ChordTextEditor';
 import PrintHeader from './components/PrintHeader';
+import SetlistView from './components/SetlistView';
 
 function App() {
   const [nashvilleMode, setNashvilleMode] = useState(true);
   const [twoColumnLayout, setTwoColumnLayout] = useState(false);
-  const [fitToPage, setFitToPage] = useState(false);
+  const [fitToPage, setFitToPage] = useState(true); // Default to true
   const [fontSize, setFontSize] = useState('normal');
+  const [openSetlist, setOpenSetlist] = useState<Setlist | null>(null);
   const [song, setSong] = useState<Song>({
     id: 'new-song',
     metadata: {
@@ -59,48 +62,73 @@ function App() {
     });
   };
 
+  const handleLoadChart = (chart: Song) => {
+    setSong(chart);
+  };
+
+  const handleChartSaved = (chartId: string) => {
+    // Update song ID to reflect it's been saved
+    setSong(prev => ({ ...prev, id: chartId }));
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Toolbar
-        nashvilleMode={nashvilleMode}
-        onToggleMode={() => setNashvilleMode(!nashvilleMode)}
-        twoColumnLayout={twoColumnLayout}
-        onToggleTwoColumn={() => setTwoColumnLayout(!twoColumnLayout)}
-        fitToPage={fitToPage}
-        onToggleFitToPage={() => setFitToPage(!fitToPage)}
-        fontSize={fontSize}
-        onFontSizeChange={setFontSize}
-        song={song}
-        onNewSong={() => {
-          setSong({
-            id: `new-${Date.now()}`,
-            metadata: {
-              title: 'Untitled',
-              key: 'C',
-            },
-            sections: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-        }}
-        onLoadFile={handleLoadFile}
-      />
+    <>
+      <div className="min-h-screen bg-gray-50">
+        <NewToolbar
+          nashvilleMode={nashvilleMode}
+          onToggleMode={() => setNashvilleMode(!nashvilleMode)}
+          twoColumnLayout={twoColumnLayout}
+          onToggleTwoColumn={() => setTwoColumnLayout(!twoColumnLayout)}
+          fitToPage={fitToPage}
+          onToggleFitToPage={() => setFitToPage(!fitToPage)}
+          fontSize={fontSize}
+          onFontSizeChange={setFontSize}
+          song={song}
+          onNewSong={() => {
+            setSong({
+              id: `new-${Date.now()}`,
+              metadata: {
+                title: 'Untitled',
+                key: 'C',
+              },
+              sections: [],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+          }}
+          onLoadFile={handleLoadFile}
+          onLoadChart={handleLoadChart}
+          onChartSaved={handleChartSaved}
+          onOpenSetlist={setOpenSetlist}
+        />
 
-      <div className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">
-        <PrintHeader metadata={song.metadata} />
+        <div className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">
+          <PrintHeader metadata={song.metadata} />
 
-        <div className={`mt-8 print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
-          <ChordTextEditor
-            song={song}
-            nashvilleMode={nashvilleMode}
-            twoColumnLayout={twoColumnLayout}
-            fitToPage={fitToPage}
-            fontSize={fontSize}
-            onUpdate={updateSong}
-          />
+          <div className={`mt-8 print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
+            <ChordTextEditor
+              song={song}
+              nashvilleMode={nashvilleMode}
+              twoColumnLayout={twoColumnLayout}
+              fitToPage={fitToPage}
+              fontSize={fontSize}
+              onUpdate={updateSong}
+            />
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Setlist View - Full Screen Overlay */}
+      <SetlistView
+        isOpen={openSetlist !== null}
+        setlist={openSetlist}
+        onClose={() => setOpenSetlist(null)}
+        nashvilleMode={nashvilleMode}
+        twoColumnLayout={twoColumnLayout}
+        fitToPage={fitToPage}
+        fontSize={fontSize}
+      />
+    </>
   );
 }
 

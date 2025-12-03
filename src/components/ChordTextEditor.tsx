@@ -13,11 +13,38 @@ interface ChordTextEditorProps {
 }
 
 export default function ChordTextEditor({ song, nashvilleMode, twoColumnLayout, fitToPage, fontSize, onUpdate }: ChordTextEditorProps) {
-  const [text, setText] = useState(() => sectionsToChordText(song.sections));
+  const [text, setText] = useState(() => {
+    const sectionsText = sectionsToChordText(song.sections);
+    // If no content, provide prefilled metadata template
+    if (!sectionsText || sectionsText.trim() === '') {
+      return `Title: Untitled
+Key: C
+Tempo: 120
+Meter: 4/4
+Style:
+
+V1:
+  `;
+    }
+    return sectionsText;
+  });
 
   // Update text when song changes externally (e.g., new song)
   useEffect(() => {
-    setText(sectionsToChordText(song.sections));
+    const sectionsText = sectionsToChordText(song.sections);
+    // If no content, provide prefilled metadata template
+    if (!sectionsText || sectionsText.trim() === '') {
+      setText(`Title: Untitled
+Key: C
+Tempo: 120
+Meter: 4/4
+Style:
+
+V1:
+  `);
+    } else {
+      setText(sectionsText);
+    }
   }, [song.id]);
 
   const handleTextChange = (value: string) => {
