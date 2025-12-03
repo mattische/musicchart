@@ -114,7 +114,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                   )}
 
                   {/* Measures on this line */}
-                  <div className="flex gap-6 items-end flex-wrap">
+                  <div className="flex gap-6 items-end">
                     {line.measures.map((measure) => (
                       <div key={measure.id} className="flex gap-3 items-end">
                         {/* Inline meter change */}
