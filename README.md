@@ -171,6 +171,31 @@ b7       → Flat seven
   PDFs are saved to ./pdfs/ with filenames based on song metadata: "Song Title - Key.pdf"
   ```
 
+  ### Generate PDFs from JSON exports
+
+  You can also generate PDFs from exported JSON files (created via Settings → Export All Data in the app).
+
+  ```bash
+  # Generate PDFs from all setlists in a JSON export
+  node generate-pdfs.mjs --from-json=musicchart-backup.json
+
+  # List all setlists in the JSON file
+  node generate-pdfs.mjs --from-json=backup.json --list-setlists
+
+  # Generate PDFs for a specific setlist only
+  node generate-pdfs.mjs --from-json=backup.json --setlist="Live Gig"
+
+  # Combine with other options
+  node generate-pdfs.mjs --from-json=backup.json --setlist="My Band" --font-size=big
+  ```
+
+  **Benefits of using JSON exports:**
+  - Preserve all your charts and setlists in one file
+  - Generate PDFs for specific setlists only
+  - Charts are automatically generated in the correct setlist order
+  - Easy to organize and batch-process multiple gigs
+  ```
+
 ## Stack
 
 - React 18

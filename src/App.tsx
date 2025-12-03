@@ -123,6 +123,7 @@ function App() {
         isOpen={openSetlist !== null}
         setlist={openSetlist}
         onClose={() => setOpenSetlist(null)}
+        onOpenSetlist={setOpenSetlist}
         nashvilleMode={nashvilleMode}
         twoColumnLayout={twoColumnLayout}
         fitToPage={fitToPage}

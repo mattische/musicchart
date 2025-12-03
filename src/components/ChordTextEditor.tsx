@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Song } from '../types/song';
+import { Song, SongMetadata } from '../types/song';
 import { parseChordTextWithMetadata, sectionsToChordText } from '../utils/jotChordParser';
 import ChordTextOutput from './ChordTextOutput';
+import MetadataEditor from './MetadataEditor';
 
 interface ChordTextEditorProps {
   song: Song;
@@ -64,11 +65,65 @@ V1:
     });
   };
 
+  const handleMetadataUpdate = (metadata: SongMetadata) => {
+    // Update the song with new metadata
+    onUpdate({
+      ...song,
+      metadata,
+      updatedAt: new Date(),
+    });
+
+    // Also rebuild the text with new metadata
+    let newText = '';
+
+    if (metadata.title) {
+      newText += `Title: ${metadata.title}\n`;
+    }
+    if (metadata.key) {
+      newText += `Key: ${metadata.key}\n`;
+    }
+    if (metadata.tempo) {
+      newText += `Tempo: ${metadata.tempo}\n`;
+    }
+    if (metadata.timeSignature) {
+      newText += `Meter: ${metadata.timeSignature}\n`;
+    }
+    if (metadata.style) {
+      newText += `Style: ${metadata.style}\n`;
+    }
+    if (metadata.feel) {
+      newText += `Feel: ${metadata.feel}\n`;
+    }
+    if (metadata.customProperties) {
+      Object.entries(metadata.customProperties).forEach(([key, value]) => {
+        newText += `$${key}: ${value}\n`;
+      });
+    }
+
+    if (newText) {
+      newText += '\n';
+    }
+
+    // Add sections
+    newText += sectionsToChordText(song.sections);
+
+    setText(newText);
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:grid-cols-1">
       {/* Input Editor */}
       <div className="bg-white rounded-lg shadow-md p-6 no-print">
         <h2 className="text-lg font-semibold text-gray-800 mb-3">Edit</h2>
+
+        {/* Metadata Editor */}
+        <div className="mb-4">
+          <MetadataEditor
+            metadata={song.metadata}
+            onUpdate={handleMetadataUpdate}
+          />
+        </div>
+
         <textarea
           value={text}
           onChange={(e) => handleTextChange(e.target.value)}

@@ -18,7 +18,10 @@ function parseArgs() {
     fitToPage: true, // Default to fit-to-page
     twoColumnLayout: false,
     fontSize: 'normal',
-    showHelp: false
+    showHelp: false,
+    fromJson: null,
+    setlistName: null,
+    listSetlists: false
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -32,6 +35,8 @@ function parseArgs() {
       config.fitToPage = false;
     } else if (arg === '--two-columns') {
       config.twoColumnLayout = true;
+    } else if (arg === '--list-setlists') {
+      config.listSetlists = true;
     } else if (arg.startsWith('--font-size=')) {
       const size = arg.split('=')[1];
       if (['small', 'normal', 'medium', 'big'].includes(size)) {
@@ -40,6 +45,10 @@ function parseArgs() {
         console.error(`Invalid font size: ${size}. Valid options: small, normal, medium, big`);
         process.exit(1);
       }
+    } else if (arg.startsWith('--from-json=')) {
+      config.fromJson = arg.split('=')[1];
+    } else if (arg.startsWith('--setlist=')) {
+      config.setlistName = arg.split('=')[1];
     } else if (!arg.startsWith('--')) {
       // First non-flag argument is the input directory
       config.inputDir = arg;
@@ -54,15 +63,19 @@ function showHelp() {
 MusicChart PDF Generator
 ========================
 
-Generate PDFs from .txt chord charts using the MusicChart web interface.
+Generate PDFs from .txt chord charts or JSON exports using the MusicChart web interface.
 
 USAGE:
   node generate-pdfs.mjs [input-directory] [options]
+  node generate-pdfs.mjs --from-json=FILE [options]
 
 ARGUMENTS:
-  input-directory    Directory containing .txt files (default: ./songs-txt)
+  input-directory       Directory containing .txt files (default: ./songs-txt)
 
 OPTIONS:
+  --from-json=FILE      Generate PDFs from exported JSON file
+  --setlist=NAME        Generate PDFs only for specified setlist (with --from-json)
+  --list-setlists       List all setlists in JSON file and exit (with --from-json)
   --fit-to-page         Fit entire chart to one page (DEFAULT)
   --no-fit-to-page      Allow charts to span multiple pages
   --two-columns         Use two-column layout for printing
@@ -70,11 +83,20 @@ OPTIONS:
   -h, --help            Show this help message
 
 EXAMPLES:
-  # Generate PDFs with default settings (fit-to-page enabled)
+  # Generate PDFs from .txt files with default settings
   node generate-pdfs.mjs
 
   # Use a different input directory
   node generate-pdfs.mjs ./my-songs
+
+  # Generate PDFs from JSON export (all setlists)
+  node generate-pdfs.mjs --from-json=musicchart-backup.json
+
+  # Generate PDFs for a specific setlist only
+  node generate-pdfs.mjs --from-json=backup.json --setlist="Live Gig"
+
+  # List all setlists in a JSON file
+  node generate-pdfs.mjs --from-json=backup.json --list-setlists
 
   # Allow multi-page charts with big font
   node generate-pdfs.mjs --no-fit-to-page --font-size=big
@@ -106,6 +128,176 @@ OUTPUT:
 `);
 }
 
+// ============================================
+// JSON HANDLING FUNCTIONS
+// ============================================
+
+/**
+ * Convert a chart object to chord text format
+ */
+function chartToChordText(chart) {
+  let text = '';
+
+  // Add metadata
+  if (chart.metadata.title) {
+    text += `Title: ${chart.metadata.title}\n`;
+  }
+  if (chart.metadata.key) {
+    text += `Key: ${chart.metadata.key}\n`;
+  }
+  if (chart.metadata.tempo) {
+    text += `Tempo: ${chart.metadata.tempo}\n`;
+  }
+  if (chart.metadata.timeSignature) {
+    text += `Meter: ${chart.metadata.timeSignature}\n`;
+  }
+  if (chart.metadata.style) {
+    text += `Style: ${chart.metadata.style}\n`;
+  }
+  if (chart.metadata.feel) {
+    text += `Feel: ${chart.metadata.feel}\n`;
+  }
+  if (chart.metadata.customProperties) {
+    Object.entries(chart.metadata.customProperties).forEach(([key, value]) => {
+      text += `$${key}: ${value}\n`;
+    });
+  }
+
+  if (text) {
+    text += '\n';
+  }
+
+  // Convert sections
+  text += sectionsToChordText(chart.sections);
+
+  return text;
+}
+
+/**
+ * Convert sections array to chord text
+ */
+function sectionsToChordText(sections) {
+  if (sections.length === 0) return '';
+
+  return sections.map((section) => {
+    const lines = [];
+
+    // Section header
+    lines.push(`${section.name}:`);
+
+    // Use measureLines if available to preserve line structure
+    if (section.measureLines && section.measureLines.length > 0) {
+      section.measureLines.forEach((line) => {
+        let lineText = '';
+
+        // Handle repeat notation
+        if (line.isRepeat) {
+          const measuresText = line.measures.map(m => m.rawText || chordsToText(m.chords)).join(' ');
+          const multiplier = line.repeatMultiplier ? `{${line.repeatMultiplier}}` : '';
+          lineText = `  ||: ${measuresText} :||${multiplier}`;
+        } else {
+          // Regular line - join all measures with space
+          lineText = '  ' + line.measures.map((measure) => {
+            let text = measure.rawText || chordsToText(measure.chords);
+            if (measure.comment) {
+              text = text ? `${text} /${measure.comment}` : `//${measure.comment}`;
+            }
+            return text;
+          }).filter(t => t).join(' ');
+        }
+
+        if (lineText.trim()) {
+          lines.push(lineText);
+        }
+      });
+    } else {
+      // Fallback to old format if no measureLines
+      section.measures.forEach((measure) => {
+        let text = measure.rawText || chordsToText(measure.chords);
+        if (measure.comment) {
+          text = text ? `${text} /${measure.comment}` : `//${measure.comment}`;
+        }
+        if (text) {
+          lines.push('  ' + text);
+        }
+      });
+    }
+
+    return lines.join('\n');
+  }).join('\n\n');
+}
+
+function chordsToText(chords) {
+  return chords.map(chord => {
+    let text = chord.number;
+    if (chord.beats) text += '.'.repeat(chord.beats);
+    if (chord.accent) text += '!';
+    return text;
+  }).join(' ');
+}
+
+/**
+ * Load and parse JSON export file
+ */
+function loadJsonData(filepath) {
+  if (!fs.existsSync(filepath)) {
+    console.error(`Error: JSON file '${filepath}' does not exist`);
+    process.exit(1);
+  }
+
+  try {
+    const content = fs.readFileSync(filepath, 'utf8');
+    const data = JSON.parse(content);
+
+    if (!data.charts || !data.setlists || !data.setlistItems) {
+      console.error('Error: Invalid JSON format. Expected export data with charts, setlists, and setlistItems');
+      process.exit(1);
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Error reading JSON file: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+/**
+ * Get charts for a setlist in correct order
+ */
+function getChartsForSetlist(data, setlistId) {
+  // Get all items for this setlist, sorted by order
+  const items = data.setlistItems
+    .filter(item => item.setlistId === setlistId)
+    .sort((a, b) => a.order - b.order);
+
+  // Get the charts in order
+  const charts = [];
+  for (const item of items) {
+    const chart = data.charts.find(c => c.id === item.chartId);
+    if (chart) {
+      charts.push(chart);
+    }
+  }
+
+  return charts;
+}
+
+/**
+ * List all setlists in JSON data
+ */
+function listSetlists(data) {
+  console.log('\nSetlists in JSON file:');
+  console.log('======================\n');
+
+  for (const setlist of data.setlists) {
+    const chartCount = data.setlistItems.filter(item => item.setlistId === setlist.id).length;
+    const defaultMarker = setlist.isDefault ? ' (Default)' : '';
+    console.log(`- "${setlist.name}"${defaultMarker} (${chartCount} charts)`);
+  }
+
+  console.log();
+}
+
 const config = parseArgs();
 
 if (config.showHelp) {
@@ -128,18 +320,26 @@ if (!fs.existsSync(SONGS_DIR)) {
   process.exit(1);
 }
 
-async function generatePDF(songFile, browser, settings) {
+async function generatePDF(chartData, browser, settings) {
   const page = await browser.newPage();
 
   try {
-    // Read song file
-    const songContent = fs.readFileSync(path.join(SONGS_DIR, songFile), 'utf8');
+    // chartData can be either a filename (string) or an object with { content, title, key }
+    let songContent, title, key;
 
-    // Extract title and key from content
-    const titleMatch = songContent.match(/Title:\s*(.+)/);
-    const keyMatch = songContent.match(/Key:\s*(.+)/);
-    const title = titleMatch ? titleMatch[1].trim() : songFile.replace('.txt', '');
-    const key = keyMatch ? keyMatch[1].trim() : 'C';
+    if (typeof chartData === 'string') {
+      // Legacy: reading from file
+      songContent = fs.readFileSync(path.join(SONGS_DIR, chartData), 'utf8');
+      const titleMatch = songContent.match(/Title:\s*(.+)/);
+      const keyMatch = songContent.match(/Key:\s*(.+)/);
+      title = titleMatch ? titleMatch[1].trim() : chartData.replace('.txt', '');
+      key = keyMatch ? keyMatch[1].trim() : 'C';
+    } else {
+      // New: direct chart object
+      songContent = chartData.content;
+      title = chartData.title;
+      key = chartData.key;
+    }
 
     console.log(`Generating PDF for: ${title} - ${key}`);
 
@@ -420,8 +620,97 @@ async function generateAllPDFs() {
   }
 }
 
+async function generatePDFsFromJson() {
+  console.log('Starting PDF generation from JSON...');
+  console.log(`JSON file: ${config.fromJson}`);
+  console.log(`Output directory: ${OUTPUT_DIR}`);
+  console.log(`Settings: fit-to-page=${config.fitToPage}, two-columns=${config.twoColumnLayout}, font-size=${config.fontSize}\n`);
+
+  // Load JSON data
+  const data = loadJsonData(config.fromJson);
+
+  // If --list-setlists, show list and exit
+  if (config.listSetlists) {
+    listSetlists(data);
+    return;
+  }
+
+  // Determine which setlists to process
+  let setlistsToProcess;
+  if (config.setlistName) {
+    // Find specific setlist
+    const setlist = data.setlists.find(s => s.name === config.setlistName);
+    if (!setlist) {
+      console.error(`Error: Setlist "${config.setlistName}" not found`);
+      console.log('\nAvailable setlists:');
+      listSetlists(data);
+      process.exit(1);
+    }
+    setlistsToProcess = [setlist];
+    console.log(`Processing setlist: "${setlist.name}"\n`);
+  } else {
+    // Process all setlists
+    setlistsToProcess = data.setlists;
+    console.log(`Processing all ${setlistsToProcess.length} setlist(s)\n`);
+  }
+
+  // Launch browser once for all PDFs
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+
+  let totalGenerated = 0;
+
+  try {
+    // Process each setlist
+    for (const setlist of setlistsToProcess) {
+      const charts = getChartsForSetlist(data, setlist.id);
+
+      if (charts.length === 0) {
+        console.log(`⊘ Setlist "${setlist.name}" is empty, skipping\n`);
+        continue;
+      }
+
+      console.log(`\n📋 Setlist: "${setlist.name}" (${charts.length} charts)`);
+      console.log('─'.repeat(50));
+
+      // Process each chart in the setlist
+      for (const chart of charts) {
+        const content = chartToChordText(chart);
+        const chartData = {
+          content,
+          title: chart.metadata.title || 'Untitled',
+          key: chart.metadata.key || 'C'
+        };
+
+        await generatePDF(chartData, browser, {
+          fitToPage: config.fitToPage,
+          twoColumnLayout: config.twoColumnLayout,
+          fontSize: config.fontSize
+        });
+
+        totalGenerated++;
+      }
+    }
+
+    console.log('\n' + '='.repeat(50));
+    console.log(`✓ Generated ${totalGenerated} PDF(s) successfully!`);
+    console.log(`PDFs saved to: ${OUTPUT_DIR}/`);
+  } finally {
+    await browser.close();
+  }
+}
+
 // Run the script
-generateAllPDFs().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+if (config.fromJson) {
+  generatePDFsFromJson().catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
+} else {
+  generateAllPDFs().catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
+}

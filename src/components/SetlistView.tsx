@@ -5,11 +5,13 @@ import { getChartsInSetlist, saveChart } from '../db/operations';
 import ChordTextEditor from './ChordTextEditor';
 import ChordTextOutput from './ChordTextOutput';
 import PrintHeader from './PrintHeader';
+import SetlistManager from './SetlistManager';
 
 interface SetlistViewProps {
   isOpen: boolean;
   setlist: Setlist | null;
   onClose: () => void;
+  onOpenSetlist: (setlist: Setlist) => void;
   nashvilleMode: boolean;
   twoColumnLayout: boolean;
   fitToPage: boolean;
@@ -20,6 +22,7 @@ export default function SetlistView({
   isOpen,
   setlist,
   onClose,
+  onOpenSetlist,
   nashvilleMode,
   twoColumnLayout,
   fitToPage,
@@ -29,6 +32,7 @@ export default function SetlistView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isLiveMode, setIsLiveMode] = useState(true); // Default to Live Mode
+  const [showSetlistManager, setShowSetlistManager] = useState(false);
 
   useEffect(() => {
     if (isOpen && setlist) {
@@ -47,6 +51,12 @@ export default function SetlistView({
     const loadedCharts = await getChartsInSetlist(setlist.id);
     setCharts(loadedCharts);
     setCurrentIndex(0);
+  };
+
+  const handleSetlistManagerClose = () => {
+    setShowSetlistManager(false);
+    // Reload charts in case order changed
+    loadCharts();
   };
 
   const handleNext = () => {
@@ -98,13 +108,22 @@ export default function SetlistView({
       {/* Header/Navigation Bar */}
       <div className="bg-gray-800 text-white shadow-lg no-print">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
-          >
-            ← Back
-          </button>
+          {/* Left side - Back and Reorder buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
+            >
+              ← Back
+            </button>
+            <button
+              onClick={() => setShowSetlistManager(true)}
+              className="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors text-sm"
+              title="Reorder songs in setlist"
+            >
+              ⇅ Reorder
+            </button>
+          </div>
 
           {/* Setlist info and navigation */}
           <div className="flex-1 flex items-center justify-center gap-4">
@@ -234,6 +253,13 @@ export default function SetlistView({
         {' | '}
         Keyboard: ← → or ↑ ↓ to navigate | ESC to close
       </div>
+
+      {/* SetlistManager Modal */}
+      <SetlistManager
+        isOpen={showSetlistManager}
+        onClose={handleSetlistManagerClose}
+        onOpenSetlist={onOpenSetlist}
+      />
     </div>
   );
 }

@@ -26,6 +26,8 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
   const [editingName, setEditingName] = useState('');
   const [showAddCharts, setShowAddCharts] = useState(false);
   const [availableCharts, setAvailableCharts] = useState<Song[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -129,6 +131,41 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
     });
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    setEditingCharts((prevCharts) => {
+      const newCharts = [...prevCharts];
+      const [removed] = newCharts.splice(draggedIndex, 1);
+      newCharts.splice(dropIndex, 0, removed);
+      return newCharts;
+    });
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   if (!isOpen) return null;
 
   // Add charts dialog
@@ -225,10 +262,21 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
                   {editingCharts.map((chart, index) => (
                     <div
                       key={chart.id}
-                      className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-colors bg-white"
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={(e) => handleDrop(e, index)}
+                      onDragEnd={handleDragEnd}
+                      className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all bg-white ${
+                        draggedIndex === index
+                          ? 'opacity-50 border-blue-400'
+                          : dragOverIndex === index
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
                     >
                       {/* Drag handle icon */}
-                      <div className="text-gray-400 cursor-move">
+                      <div className="text-gray-400 cursor-grab active:cursor-grabbing">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"></path>
                         </svg>
