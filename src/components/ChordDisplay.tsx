@@ -18,6 +18,15 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     );
   }
 
+  // Handle repeat symbol (%)
+  if (chord.number === '%') {
+    return (
+      <div className="relative inline-flex flex-col items-center min-w-[40px]">
+        <span className={`${fontSize} font-bold text-black`}>%</span>
+      </div>
+    );
+  }
+
   // Handle no chord / rest (X)
   if (chord.isRest || chord.number === 'X' || chord.number.startsWith('X_')) {
     return (

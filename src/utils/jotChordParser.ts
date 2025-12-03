@@ -330,8 +330,9 @@ function parseMeasureTokens(text: string, nashvilleMode: boolean): Measure[] {
       return;
     }
 
-    // Check for multi-measure repeat: %, %%, %%%, etc (up to 8)
-    const repeatMatch = token.match(/^(%+)$/);
+    // Check for multi-measure repeat: %%, %%%, etc (2 or more %)
+    // Single % is treated as a chord (repeat last chord)
+    const repeatMatch = token.match(/^(%{2,})$/);
     if (repeatMatch) {
       const repeatCount = repeatMatch[1].length;
       measures.push({
@@ -510,7 +511,7 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
 
 /**
  * Parse a single chord token with all its modifiers
- * Examples: "1", "4!", "5<", "<1>", "#5", "b7", "X", "1=", "1~", "1/⁎comment⁎/", etc.
+ * Examples: "1", "4!", "5<", "<1>", "#5", "b7", "X", "1=", "1~", "1/⁎comment⁎/", "%", etc.
  */
 function parseChordToken(token: string, nashvilleMode: boolean): Chord | null {
   // Handle separator (*)
@@ -518,6 +519,15 @@ function parseChordToken(token: string, nashvilleMode: boolean): Chord | null {
     return {
       id: '',
       number: '*',
+      nashvilleMode,
+    };
+  }
+
+  // Handle repeat symbol (%)
+  if (token === '%') {
+    return {
+      id: '',
+      number: '%',
       nashvilleMode,
     };
   }

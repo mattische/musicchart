@@ -1,4 +1,4 @@
-Title: Burning Love
+Title: Burning Love - C
 Key: C
 Meter: 4/4
 Style: EB - 70ies busy

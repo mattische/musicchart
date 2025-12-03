@@ -1,5 +1,7 @@
 import { Song } from '../types/song';
 import { sectionsToChordText } from '../utils/jotChordParser';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface ToolbarProps {
   nashvilleMode: boolean;
@@ -90,18 +92,102 @@ export default function Toolbar({
     URL.revokeObjectURL(url);
   };
 
-  const handleExportPDF = () => {
-    // Set document title to "Song Title - Key" for PDF filename
-    const originalTitle = document.title;
+  const handleExportPDF = async () => {
     const pdfTitle = `${song.metadata.title || 'Untitled'} - ${song.metadata.key}`;
-    document.title = pdfTitle;
 
-    window.print();
+    // Detect if user is on mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // Restore original title after print dialog
-    setTimeout(() => {
-      document.title = originalTitle;
-    }, 100);
+    if (isMobile) {
+      // Generate PDF on client side for mobile devices
+      try {
+        // Find the preview element (the one that's visible when printing)
+        const previewElement = document.querySelector('.bg-white.rounded-lg.shadow-md.p-6:not(.no-print)') as HTMLElement;
+        const headerElement = document.querySelector('.print\\:block') as HTMLElement;
+
+        if (!previewElement) {
+          console.error('Preview element not found');
+          return;
+        }
+
+        // Temporarily enable fit-to-page for mobile to ensure single page
+        const wasAlreadyFitToPage = fitToPage;
+        if (!wasAlreadyFitToPage) {
+          onToggleFitToPage();
+          // Wait for re-render
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // Create a container with both header and content
+        const container = document.createElement('div');
+        container.style.padding = '1.5cm';
+        container.style.width = '21cm'; // A4 width
+        container.style.backgroundColor = 'white';
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+
+        // Clone header and preview
+        if (headerElement) {
+          const headerClone = headerElement.cloneNode(true) as HTMLElement;
+          headerClone.style.display = 'block';
+          container.appendChild(headerClone);
+        }
+
+        const previewClone = previewElement.cloneNode(true) as HTMLElement;
+        previewClone.classList.remove('shadow-md', 'rounded-lg');
+        previewClone.style.padding = '0';
+        previewClone.style.marginTop = '1cm';
+        container.appendChild(previewClone);
+
+        document.body.appendChild(container);
+
+        // Capture as canvas with proper scaling
+        const canvas = await html2canvas(container, {
+          scale: 2, // Higher quality
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        // Remove temporary container
+        document.body.removeChild(container);
+
+        // Restore fit-to-page setting if it was changed
+        if (!wasAlreadyFitToPage) {
+          onToggleFitToPage();
+        }
+
+        // Create PDF (A4 size: 210mm x 297mm)
+        const imgWidth = 210; // A4 width in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        const pdf = new jsPDF({
+          orientation: imgHeight > 297 ? 'portrait' : 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, 297));
+
+        // Download PDF
+        pdf.save(`${pdfTitle}.pdf`);
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Failed to generate PDF. Please try again.');
+      }
+    } else {
+      // Use native print dialog for desktop
+      const originalTitle = document.title;
+      document.title = pdfTitle;
+
+      window.print();
+
+      // Restore original title after print dialog
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 100);
+    }
   };
 
   return (

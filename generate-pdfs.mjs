@@ -322,7 +322,7 @@ async function generatePDF(songFile, browser, settings) {
       }
 
       const contentLength = chordDisplay.textContent.trim().length;
-      const hasContent = contentLength > 100; // Lowered threshold for shorter songs
+      const hasContent = contentLength > 50; // Lowered threshold for shorter songs
 
       if (!hasContent) {
         return {

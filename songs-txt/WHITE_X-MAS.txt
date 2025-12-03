@@ -1,4 +1,4 @@
-Title: WHITE X-MAS
+Title: WHITE X-MAS - C
 Key: C
 Meter: 4/4
 Style: Wb soft
