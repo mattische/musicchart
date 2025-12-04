@@ -38,11 +38,11 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
     if (!hasMetadata) return null;
 
     return (
-      <div className="mb-6 pb-4 border-b-2 border-gray-300 print:hidden">
+      <div className="mb-2 pb-1 border-b border-gray-300 print:hidden">
         {song.metadata.title && (
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">{song.metadata.title}</h1>
+          <h1 className="text-lg font-bold text-gray-900 mb-1">{song.metadata.title}</h1>
         )}
-        <div className="flex gap-4 text-sm text-gray-700 flex-wrap print:text-sm print:gap-4">
+        <div className="flex gap-2 text-xs text-gray-700 flex-wrap print:text-xs print:gap-1">
           <div>
             <strong className="font-semibold">Key:</strong> <span className="ml-1">{song.metadata.key}</span>
           </div>
@@ -86,26 +86,26 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
     const isDefaultSection = section.name === 'Section' || /^Section\s+\d+$/.test(section.name);
 
     return (
-      <div key={section.id} className="pb-4 mb-4 space-y-2 border-b border-gray-300 avoid-page-break print:space-y-2 print:pb-3 print:mb-3 print:border-gray-400">
+      <div key={section.id} className="pb-1 mb-1 space-y-0.5 border-b border-gray-300 avoid-page-break print:space-y-1 print:pb-2 print:mb-2 print:border-gray-400">
         {/* Section Name - only show if not a default section */}
         {!isDefaultSection && (
-          <div className="mb-1">
-            <h3 className="text-2xl font-bold text-gray-900 inline-block print:text-xl">
+          <div className="mb-0.5">
+            <h3 className="text-base font-bold text-gray-900 inline-block print:text-lg">
               {section.name}
             </h3>
           </div>
         )}
 
         {/* Measure lines - each line from input on its own row */}
-        <div className="space-y-6">
+        <div className="space-y-1.5">
           {section.measureLines && section.measureLines.length > 0 ? (
             section.measureLines.map((line, lineIdx) => (
-              <div key={line.id} className="flex items-start gap-4">
+              <div key={line.id} className="flex items-start gap-2">
                 {/* Line number */}
-                <span className="text-xs text-gray-400 w-6 mt-2">{lineIdx + 1}</span>
+                <span className="text-xs text-gray-400 w-4 mt-1">{lineIdx + 1}</span>
 
                 {/* Repeat notation wrapper */}
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-1">
                   {line.isRepeat && (
                     <span className="text-gray-600 text-xl self-end">
                       <span className="font-bold">|</span>
@@ -114,9 +114,9 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                   )}
 
                   {/* Measures on this line */}
-                  <div className="flex gap-6 items-end">
+                  <div className="flex gap-1 items-end">
                     {line.measures.map((measure) => (
-                      <div key={measure.id} className="flex gap-3 items-end">
+                      <div key={measure.id} className="flex gap-0.5 items-end">
                         {/* Inline meter change */}
                         {measure.meterChange && (
                           <span className="text-sm text-gray-600 font-semibold self-center mr-1">
@@ -140,7 +140,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                             )}
 
                             {/* Measure content - with optional split bar styling */}
-                            <div className={`flex gap-2 items-end ${measure.isSplitBar ? 'border-b-2 border-black pb-1' : ''}`}>
+                            <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5 border-b-2 border-black pb-1' : 'gap-1'}`}>
                               {measure.chords.length > 0 ? (
                                 <>
                                   {measure.chords.map((chord) => (
@@ -193,7 +193,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
             section.measures.map((measure, idx) => (
               <div key={measure.id} className="flex items-center gap-4">
                 <span className="text-xs text-gray-400 w-6">{idx + 1}</span>
-                <div className="flex gap-6 items-end">
+                <div className="flex gap-0.5 items-end">
                   {measure.chords.length > 0 ? (
                     <>
                       {measure.chords.map((chord) => (

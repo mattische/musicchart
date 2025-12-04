@@ -12,7 +12,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   // Handle separator (*)
   if (chord.number === '*') {
     return (
-      <div className="relative inline-flex flex-col items-center justify-center min-w-[40px] self-center mb-2">
+      <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-center mb-2">
         <div className="w-3 h-3 bg-black rounded-full print:bg-black"></div>
       </div>
     );
@@ -21,7 +21,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   // Handle repeat symbol (%)
   if (chord.number === '%') {
     return (
-      <div className="relative inline-flex flex-col items-center min-w-[40px]">
+      <div className="relative inline-flex flex-col items-center min-w-[16px]">
         <span className={`${fontSize} font-bold text-black`}>%</span>
       </div>
     );
@@ -30,7 +30,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   // Handle no chord / rest (X)
   if (chord.isRest || chord.number === 'X' || chord.number.startsWith('X_')) {
     return (
-      <div className="relative inline-flex flex-col items-center min-w-[40px]">
+      <div className="relative inline-flex flex-col items-center min-w-[16px]">
         <span className={`${fontSize} font-bold text-black`}>{chord.number}</span>
       </div>
     );
@@ -99,7 +99,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   };
 
   return (
-    <div className="relative inline-flex flex-col items-center min-w-[40px]">
+    <div className="relative inline-flex flex-col items-center min-w-[16px]">
       {/* Ending number above chord (shown as circle) */}
       {chord.ending && (
         <div className="flex justify-center mb-1">

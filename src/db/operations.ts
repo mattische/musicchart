@@ -63,7 +63,7 @@ export async function searchCharts(query: string): Promise<Song[]> {
 // ============================================
 
 export async function createSetlist(name: string): Promise<string> {
-  const id = `setlist-${Date.now()}`;
+  const id = crypto.randomUUID();
   await db.setlists.add({
     id,
     name,
@@ -125,7 +125,7 @@ export async function addChartToSetlist(
   const maxOrder = items.reduce((max, item) => Math.max(max, item.order), 0);
 
   await db.setlistItems.add({
-    id: `item-${Date.now()}-${Math.random()}`,
+    id: crypto.randomUUID(),
     setlistId,
     chartId,
     order: maxOrder + 1,
@@ -207,6 +207,33 @@ export async function exportAllData(): Promise<ExportData> {
     exportedAt: Date.now(),
     charts,
     setlists,
+    setlistItems
+  };
+}
+
+export async function exportSetlist(setlistId: string): Promise<ExportData> {
+  // Get the setlist
+  const setlist = await db.setlists.get(setlistId);
+  if (!setlist) {
+    throw new Error('Setlist not found');
+  }
+
+  // Get all items in this setlist
+  const setlistItems = await db.setlistItems.where('setlistId').equals(setlistId).toArray();
+
+  // Get all charts referenced in this setlist
+  const chartIds = setlistItems.map(item => item.chartId);
+  const charts: SavedChart[] = [];
+  for (const chartId of chartIds) {
+    const chart = await db.charts.get(chartId);
+    if (chart) charts.push(chart);
+  }
+
+  return {
+    version: 1,
+    exportedAt: Date.now(),
+    charts,
+    setlists: [setlist],
     setlistItems
   };
 }

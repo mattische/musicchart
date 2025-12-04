@@ -59,7 +59,7 @@ code {
 
   /* Fit to page: scale content to fit on one A4 page */
   .print-fit-to-page {
-    font-size: 0.65em !important;
+    font-size: 0.75em !important;
     max-height: none !important;
   }
 
@@ -70,30 +70,94 @@ code {
     break-inside: auto !important;
   }
 
-  /* Reduce spacing when fitting to page */
+  /* Reduce spacing when fitting to page - matching web app compact styles */
   .print-fit-to-page h1 {
-    font-size: 1.5rem !important;
-    margin-bottom: 0.5rem !important;
+    font-size: 1rem !important;
+    margin-bottom: 0.25rem !important;
   }
 
   .print-fit-to-page h3 {
-    font-size: 1.1rem !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 0.125rem !important;
   }
 
-  .print-fit-to-page .text-2xl {
-    font-size: 1.1rem !important;
+  .print-fit-to-page .text-2xl,
+  .print-fit-to-page .text-xl,
+  .print-fit-to-page .text-lg,
+  .print-fit-to-page .text-base {
+    font-size: 0.9rem !important;
   }
 
-  .print-fit-to-page .mb-4 {
-    margin-bottom: 0.5rem !important;
+  /* Compact metadata spacing */
+  .print-fit-to-page .mb-6,
+  .print-fit-to-page .mb-4,
+  .print-fit-to-page .mb-3,
+  .print-fit-to-page .mb-2 {
+    margin-bottom: 0.25rem !important;
   }
 
-  .print-fit-to-page .pb-4 {
-    padding-bottom: 0.5rem !important;
+  .print-fit-to-page .pb-4,
+  .print-fit-to-page .pb-3,
+  .print-fit-to-page .pb-2,
+  .print-fit-to-page .pb-1 {
+    padding-bottom: 0.125rem !important;
   }
 
-  .print-fit-to-page .space-y-2 > * + * {
-    margin-top: 0.25rem !important;
+  /* Compact section spacing */
+  .print-fit-to-page .space-y-6 > * + *,
+  .print-fit-to-page .space-y-4 > * + *,
+  .print-fit-to-page .space-y-3 > * + *,
+  .print-fit-to-page .space-y-2 > * + *,
+  .print-fit-to-page .space-y-1\.5 > * + *,
+  .print-fit-to-page .space-y-1 > * + * {
+    margin-top: 0.15rem !important;
+  }
+
+  /* Compact gaps between elements */
+  .print-fit-to-page .gap-4 {
+    gap: 0.25rem !important;
+  }
+
+  .print-fit-to-page .gap-3 {
+    gap: 0.2rem !important;
+  }
+
+  .print-fit-to-page .gap-2 {
+    gap: 0.15rem !important;
+  }
+
+  .print-fit-to-page .gap-1 {
+    gap: 0.1rem !important;
+  }
+
+  .print-fit-to-page .gap-0\.5 {
+    gap: 0.05rem !important;
+  }
+
+  /* Extra compact chord spacing for print */
+  .print-fit-to-page [class*="min-w-"] {
+    min-width: 12px !important;
+  }
+
+  /* Reduce line numbers width */
+  .print-fit-to-page .w-6,
+  .print-fit-to-page .w-4 {
+    width: 0.75rem !important;
+  }
+
+  /* Compact text sizes for annotations */
+  .print-fit-to-page .text-xs {
+    font-size: 0.65rem !important;
+  }
+
+  .print-fit-to-page .text-sm {
+    font-size: 0.75rem !important;
+  }
+
+  /* Reduce border widths for visual breathing room */
+  .print-fit-to-page .border-b-2,
+  .print-fit-to-page .border-b {
+    border-bottom-width: 1px !important;
   }
 }
 

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Song } from './types/song';
 import { parseChordTextWithMetadata } from './utils/jotChordParser';
 import { Setlist } from './db/database';
+import { saveChart } from './db/operations';
 import NewToolbar from './components/NewToolbar';
 import ChordTextEditor from './components/ChordTextEditor';
 import PrintHeader from './components/PrintHeader';
@@ -38,6 +39,50 @@ function App() {
     updatedAt: new Date(),
   });
 
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-save when song changes (debounced)
+  useEffect(() => {
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Only auto-save if it's a saved chart (not a new chart)
+    const isSavedChart = song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-');
+
+    if (isSavedChart) {
+      setAutoSaveStatus('saving');
+
+      // Debounce auto-save by 1 second
+      autoSaveTimeoutRef.current = setTimeout(async () => {
+        try {
+          await saveChart(song);
+          setAutoSaveStatus('saved');
+          console.log('✓ Auto-saved:', song.metadata.title);
+
+          // Clear "saved" status after 2 seconds
+          if (autoSaveStatusTimeoutRef.current) {
+            clearTimeout(autoSaveStatusTimeoutRef.current);
+          }
+          autoSaveStatusTimeoutRef.current = setTimeout(() => {
+            setAutoSaveStatus('idle');
+          }, 2000);
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+          setAutoSaveStatus('idle');
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [song]);
 
   const updateSong = (updatedSong: Song) => {
     setSong(updatedSong);
@@ -104,6 +149,19 @@ function App() {
 
         <div className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">
           <PrintHeader metadata={song.metadata} />
+
+          {/* Auto-save status indicator */}
+          {autoSaveStatus !== 'idle' && (
+            <div className="no-print flex justify-end mb-2">
+              <div className={`text-sm px-3 py-1 rounded-full ${
+                autoSaveStatus === 'saving'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {autoSaveStatus === 'saving' ? '💾 Saving...' : '✓ Saved'}
+              </div>
+            </div>
+          )}
 
           <div className={`mt-8 print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
             <ChordTextEditor

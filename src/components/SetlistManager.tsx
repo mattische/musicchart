@@ -3,7 +3,6 @@ import { Song } from '../types/song';
 import { Setlist } from '../db/database';
 import {
   getAllSetlists,
-  createSetlist,
   updateSetlist,
   deleteSetlist,
   getChartsInSetlist,
@@ -38,14 +37,6 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
   const loadSetlists = async () => {
     const all = await getAllSetlists();
     setSetlists(all);
-  };
-
-  const handleCreateSetlist = async () => {
-    const name = prompt('Enter setlist name:');
-    if (!name || !name.trim()) return;
-
-    await createSetlist(name.trim());
-    await loadSetlists();
   };
 
   const handleEditSetlist = async (setlist: Setlist) => {
@@ -423,15 +414,6 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200">
-          <button
-            onClick={handleCreateSetlist}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-          >
-            + Create New Setlist
-          </button>
-        </div>
       </div>
     </div>
   );

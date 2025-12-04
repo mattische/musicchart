@@ -7,7 +7,7 @@ import html2canvas from 'html2canvas';
 import ChartLibrary from './ChartLibrary';
 import SetlistManager from './SetlistManager';
 import SaveChartDialog from './SaveChartDialog';
-import { exportAllData, importData } from '../db/operations';
+import { exportAllData, importData, createSetlist } from '../db/operations';
 
 interface ToolbarProps {
   nashvilleMode: boolean;
@@ -43,7 +43,6 @@ export default function NewToolbar({
   onFontSizeChange
 }: ToolbarProps) {
   const [showFileMenu, setShowFileMenu] = useState(false);
-  const [showSetlistsMenu, setShowSetlistsMenu] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showChartLibrary, setShowChartLibrary] = useState(false);
   const [showSetlistManager, setShowSetlistManager] = useState(false);
@@ -196,20 +195,35 @@ export default function NewToolbar({
     }
   };
 
+  const handleCreateSetlist = async () => {
+    setShowFileMenu(false);
+    const name = prompt('Enter setlist name:');
+    if (!name || !name.trim()) return;
+
+    try {
+      await createSetlist(name.trim());
+      alert(`Setlist "${name.trim()}" created successfully!`);
+    } catch (error) {
+      console.error('Create setlist error:', error);
+      alert('Failed to create setlist.');
+    }
+  };
+
   const handleExportAllData = async () => {
-    setShowSettingsMenu(false);
+    setShowFileMenu(false);
     const data = await exportAllData();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `musicchart-backup-${Date.now()}.json`;
+    const timestamp = new Date().toISOString().split('T')[0];
+    a.download = `musicchart-all-${timestamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const handleImportData = () => {
-    setShowSettingsMenu(false);
+    setShowFileMenu(false);
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -221,7 +235,7 @@ export default function NewToolbar({
           try {
             const data = JSON.parse(event.target?.result as string);
             await importData(data);
-            alert('Data imported successfully!');
+            alert(`Import successful!\nImported:\n- ${data.charts?.length || 0} charts\n- ${data.setlists?.length || 0} setlists\n- ${data.setlistItems?.length || 0} setlist items`);
           } catch (error) {
             console.error('Import error:', error);
             alert('Failed to import data. Please check the file format.');
@@ -248,7 +262,6 @@ export default function NewToolbar({
                 <button
                   onClick={() => {
                     setShowFileMenu(!showFileMenu);
-                    setShowSetlistsMenu(false);
                     setShowSettingsMenu(false);
                   }}
                   className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
@@ -294,33 +307,43 @@ export default function NewToolbar({
                     >
                       Export to PDF
                     </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Setlists Menu */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setShowSetlistsMenu(!showSetlistsMenu);
-                    setShowFileMenu(false);
-                    setShowSettingsMenu(false);
-                  }}
-                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
-                >
-                  🎵 Setlists
-                </button>
-                {showSetlistsMenu && (
-                  <div className="absolute top-full left-0 mt-1 bg-white text-gray-800 rounded-lg shadow-lg py-1 z-50 min-w-[200px]">
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold">SETLISTS</div>
                     <button
-                      onClick={() => { setShowSetlistManager(true); setShowSetlistsMenu(false); }}
+                      onClick={handleCreateSetlist}
                       className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
                     >
-                      Manage Setlists...
+                      Create New Setlist
+                    </button>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold">DATA</div>
+                    <button
+                      onClick={handleExportAllData}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                    >
+                      Export All Data
+                    </button>
+                    <button
+                      onClick={handleImportData}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                    >
+                      Import Data
                     </button>
                   </div>
                 )}
               </div>
+
+              {/* Setlists Button */}
+              <button
+                onClick={() => {
+                  setShowSetlistManager(true);
+                  setShowFileMenu(false);
+                  setShowSettingsMenu(false);
+                }}
+                className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
+              >
+                🎵 Setlists
+              </button>
 
               {/* Settings Menu */}
               <div className="relative">
@@ -328,7 +351,6 @@ export default function NewToolbar({
                   onClick={() => {
                     setShowSettingsMenu(!showSettingsMenu);
                     setShowFileMenu(false);
-                    setShowSetlistsMenu(false);
                   }}
                   className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
                 >
@@ -359,20 +381,6 @@ export default function NewToolbar({
                       className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
                     >
                       {fitToPage ? '✓ ' : ''}Fit to Page
-                    </button>
-                    <div className="border-t border-gray-200 my-1"></div>
-                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold">DATA</div>
-                    <button
-                      onClick={handleExportAllData}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
-                    >
-                      Export All Data
-                    </button>
-                    <button
-                      onClick={handleImportData}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
-                    >
-                      Import Data
                     </button>
                   </div>
                 )}

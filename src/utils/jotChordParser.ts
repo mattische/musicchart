@@ -459,6 +459,68 @@ function parseChords(text: string, nashvilleMode: boolean): { chords: Chord[]; i
 }
 
 /**
+ * Parse the first chord from a string and return the chord and remaining text
+ * Example: "54" -> { chord: "5", remaining: "4" }
+ * Example: "6-4" -> { chord: "6-", remaining: "4" }
+ */
+function parseFirstChord(text: string, nashvilleMode: boolean): { chord: Chord | null; remaining: string } {
+  if (!text) return { chord: null, remaining: '' };
+
+  // Try to match a complete chord at the start
+  let i = 0;
+
+  // Check for accidental at start (#, b)
+  if (text[i] === '#' || text[i] === 'b') i++;
+
+  // Must have a number
+  if (i >= text.length || !/\d/.test(text[i])) {
+    return { chord: null, remaining: text };
+  }
+  i++; // Consume the digit
+
+  // Check for quality markers (-, +, o, ^, M)
+  while (i < text.length && /[-+o^M]/.test(text[i])) i++;
+
+  // Check for extensions (sus4, add9, D7, **7, **^7, etc.)
+  if (i < text.length) {
+    // Check for 'sus'
+    if (text.slice(i).startsWith('sus')) {
+      i += 3;
+      while (i < text.length && /\d/.test(text[i])) i++;
+    }
+    // Check for 'add'
+    else if (text.slice(i).startsWith('add')) {
+      i += 3;
+      while (i < text.length && /\d/.test(text[i])) i++;
+    }
+    // Check for 'D' (dominant)
+    else if (text[i] === 'D') {
+      i++;
+      while (i < text.length && /\d/.test(text[i])) i++;
+    }
+    // Check for '**' (extended chords)
+    else if (text.slice(i).startsWith('**')) {
+      i += 2;
+      if (i < text.length && /[\^M]/.test(text[i])) i++;
+      while (i < text.length && /\d/.test(text[i])) i++;
+    }
+  }
+
+  // Check for slash chord (inversion)
+  if (i < text.length && text[i] === '/') {
+    i++;
+    if (i < text.length && (text[i] === '#' || text[i] === 'b')) i++;
+    while (i < text.length && /\d/.test(text[i])) i++;
+  }
+
+  const chordText = text.slice(0, i);
+  const remaining = text.slice(i);
+
+  const chord = parseChordToken(chordText, nashvilleMode);
+  return { chord, remaining };
+}
+
+/**
  * Expand split bar notation into multiple chords
  * Examples: "1_6-" -> [1, 6-], "(1 4)" -> [1, 4], "[1234]" -> [1, 2, 3, 4]
  * Also handles endings: "1[2 4 5]" -> [2, 4, 5] with ending=1
@@ -482,10 +544,49 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
   }
 
   // Handle underscore split bars: 1_6- or 4_3-_2_1
+  // But handle cases like 6_54 where only the first character after _ should be in split bar
   if (token.includes('_')) {
-    const parts = token.split('_').filter(p => p);
-    const chords = parts.map(part => parseChordToken(part, nashvilleMode)).filter(c => c !== null) as Chord[];
-    return { chords, wasSplitBar: true };
+    const parts = token.split('_');
+    const chords: Chord[] = [];
+    let remainingText = '';
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (!part) continue;
+
+      if (i === 0) {
+        // First part - parse as normal chord
+        const chord = parseChordToken(part, nashvilleMode);
+        if (chord) chords.push(chord);
+      } else {
+        // Parts after _ - parse only ONE chord, rest goes to remaining
+        // Extract the first chord from this part
+        const firstChord = parseFirstChord(part, nashvilleMode);
+        if (firstChord.chord) {
+          chords.push(firstChord.chord);
+        }
+        if (firstChord.remaining) {
+          remainingText += firstChord.remaining;
+        }
+      }
+    }
+
+    // If there's remaining text after parsing split bar parts,
+    // treat them as separate ackord (not part of split bar)
+    // For example: "6_54" should be split bar [6,5] and separate chord 4
+    if (remainingText && chords.length > 0) {
+      // Parse each remaining character as a separate chord
+      const extraChords = remainingText.split('').map(c => parseChordToken(c, nashvilleMode)).filter(c => c !== null) as Chord[];
+
+      // Return split bar chords + extra chords, but mark split bar appropriately
+      // The split bar only applies to the chords from the underscore parts
+      return {
+        chords: [...chords, ...extraChords],
+        wasSplitBar: chords.length > 1
+      };
+    }
+
+    return { chords, wasSplitBar: chords.length > 1 };
   }
 
   // Handle parenthesized split bars: (1 4) or (3444)
