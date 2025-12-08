@@ -294,6 +294,55 @@ function parseMeasureTokensFromLine(line: string, nashvilleMode: boolean): Measu
 }
 
 /**
+ * Smart tokenizer that respects parentheses and brackets
+ * Splits on whitespace but keeps content inside () and [] together
+ */
+function smartTokenize(text: string): string[] {
+  const tokens: string[] = [];
+  let current = '';
+  let depth = 0;
+  let inParens = false;
+  let inBrackets = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (char === '(' && !inBrackets) {
+      inParens = true;
+      depth++;
+      current += char;
+    } else if (char === ')' && inParens && !inBrackets) {
+      depth--;
+      if (depth === 0) inParens = false;
+      current += char;
+    } else if (char === '[' && !inParens) {
+      inBrackets = true;
+      depth++;
+      current += char;
+    } else if (char === ']' && inBrackets && !inParens) {
+      depth--;
+      if (depth === 0) inBrackets = false;
+      current += char;
+    } else if (/\s/.test(char) && depth === 0) {
+      // Space outside parentheses/brackets - split here
+      if (current.trim()) {
+        tokens.push(current.trim());
+        current = '';
+      }
+    } else {
+      current += char;
+    }
+  }
+
+  // Add last token
+  if (current.trim()) {
+    tokens.push(current.trim());
+  }
+
+  return tokens;
+}
+
+/**
  * Parse tokens into measures, treating split bars as separate measures
  */
 function parseMeasureTokens(text: string, nashvilleMode: boolean): Measure[] {
@@ -317,7 +366,7 @@ function parseMeasureTokens(text: string, nashvilleMode: boolean): Measure[] {
     chordText = chordText.replace(inlineCommentRegex, '').trim();
   }
 
-  const tokens = chordText.trim().split(/\s+/).filter(t => t);
+  const tokens = smartTokenize(chordText);
   const measures: Measure[] = [];
   let currentMeasureTokens: string[] = [];
   let currentMeterChange: string | undefined;
@@ -436,8 +485,7 @@ function parseChords(text: string, nashvilleMode: boolean): { chords: Chord[]; i
   const chords: Chord[] = [];
   let isSplitBar = false;
 
-  // Split by whitespace to get individual chord tokens
-  const tokens = text.trim().split(/\s+/);
+  const tokens = smartTokenize(text);
 
   tokens.forEach((token, index) => {
     if (!token) return;

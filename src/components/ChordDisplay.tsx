@@ -46,6 +46,11 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     displayNumber = displayNumber.replace(/_/g, '');
   }
 
+  // Extract accidental (# or b) from the beginning
+  const accidentalMatch = displayNumber.match(/^([#b])(.*)/);
+  const accidental = accidentalMatch ? accidentalMatch[1] : '';
+  const chordWithoutAccidental = accidentalMatch ? accidentalMatch[2] : displayNumber;
+
   // Get note symbol from value
   const getNoteSymbol = (value: string) => {
     switch (value) {
@@ -76,10 +81,14 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   const renderNoteValue = () => {
     if (!chord.annotation?.value) return null;
 
+    const symbol = getNoteSymbol(chord.annotation.value);
+    // More space above diamond chords
+    const marginClass = chord.diamond ? 'mb-2' : 'mb-1';
+
     return (
-      <div className="flex justify-center mb-1 ml-1">
-        <span className="text-2xl text-gray-700 leading-none">
-          {getNoteSymbol(chord.annotation.value)}
+      <div className={`flex justify-center ${marginClass} ml-1`}>
+        <span className="text-3xl text-gray-700 leading-none font-bold" style={{ fontFamily: "'Noto Music', sans-serif" }}>
+          {symbol}
         </span>
       </div>
     );
@@ -112,7 +121,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
       {/* Fermata above chord */}
       {chord.fermata && (
         <div className="flex justify-center mb-0.5">
-          <span className="text-2xl text-black">𝄐</span>
+          <span className="text-2xl text-black" style={{ fontFamily: "'Noto Music', sans-serif" }}>𝄐</span>
         </div>
       )}
 
@@ -147,22 +156,32 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
       <div className="relative px-1 flex items-center">
         {/* Diamond (whole note) or regular chord */}
         {chord.diamond ? (
-          <span className="inline-block relative w-8 h-8 align-baseline">
-            <span className="absolute inset-0 border-2 border-black bg-white transform rotate-45"></span>
-            <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-black z-10">
-              {displayNumber}
+          <div className="inline-flex items-center">
+            {accidental && (
+              <span className="text-sm font-bold text-black mr-0.5 self-center">{accidental}</span>
+            )}
+            <span className="inline-block relative w-8 h-8 align-baseline">
+              <span className="absolute inset-0 border-2 border-black bg-white transform rotate-45"></span>
+              <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-black z-10">
+                {chordWithoutAccidental}
+              </span>
             </span>
-          </span>
+          </div>
         ) : (
-          <span
-            className={`${fontSize} font-bold text-black`}
-            style={{
-              borderBottom: hasUnderline ? '2px solid black' : '2px solid transparent',
-              display: 'inline-block',
-              paddingBottom: '0px'
-            }}
-          >
-            {displayNumber}
+          <span className="inline-flex items-baseline">
+            {accidental && (
+              <span className="text-sm font-bold text-black mr-0.5">{accidental}</span>
+            )}
+            <span
+              className={`${fontSize} font-bold text-black`}
+              style={{
+                borderBottom: hasUnderline ? '2px solid black' : '2px solid transparent',
+                display: 'inline-block',
+                paddingBottom: '0px'
+              }}
+            >
+              {chordWithoutAccidental}
+            </span>
           </span>
         )}
 
