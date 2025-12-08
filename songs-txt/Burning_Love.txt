@@ -7,13 +7,13 @@ $Artist: Elvis
     
 IN:
   //GURA 1, GURA + PIANO 1, GURA + PIANO + BAS
-  X X X..._1. 1  
+  X X (X... 1.) 1
 
 V:
-  ||: 1 4_5 1 1 :||{4}
+  ||: 1 (4 5) 1 1 :||{4}
 
 C:
-  6-_5 4 6-_5 4 * 6-_5 4@wd
+  (6- 5) 4 (6- 5) 4 * (6- 5) 4@wd
 
 V+C:
 

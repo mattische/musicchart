@@ -415,14 +415,14 @@ function isEndingToken(token: string): boolean {
 }
 
 /**
- * Check if a token is a split bar
+ * Check if a token is a split bar (tie)
+ * Only parentheses create ties now (not underscores)
  */
 function isSplitBarToken(token: string): boolean {
   // Exclude endings from split bars
   if (isEndingToken(token)) return false;
 
-  return token.includes('_') ||
-         (token.startsWith('(') && token.endsWith(')')) ||
+  return (token.startsWith('(') && token.endsWith(')')) ||
          (token.startsWith('[') && token.endsWith(']'));
 }
 
@@ -521,10 +521,90 @@ function parseFirstChord(text: string, nashvilleMode: boolean): { chord: Chord |
 }
 
 /**
- * Expand split bar notation into multiple chords
- * Examples: "1_6-" -> [1, 6-], "(1 4)" -> [1, 4], "[1234]" -> [1, 2, 3, 4]
+ * Parse the next complete chord token with all modifiers from a string
+ * Handles dots, note values, walk indicators, etc.
+ * Example: "1.@wd" -> { chord: Chord, remaining: "" }
+ * Example: "1.2q" -> { chord: Chord(1 with dot), remaining: "2q" }
+ */
+function parseNextCompleteChord(text: string, nashvilleMode: boolean): { chord: Chord | null; remaining: string } {
+  if (!text) return { chord: null, remaining: '' };
+
+  let i = 0;
+
+  // Check for diamond notation <chord>
+  if (text[i] === '<') {
+    i++;
+    // Find the closing >
+    while (i < text.length && text[i] !== '>') i++;
+    if (i < text.length) i++; // Include the closing >
+
+    // Check for additional modifiers after diamond
+    // Walk indicators
+    if (text.slice(i).startsWith('@walkdown') || text.slice(i).startsWith('@wd')) {
+      i += text.slice(i).startsWith('@walkdown') ? 9 : 3;
+    } else if (text.slice(i).startsWith('@walkup') || text.slice(i).startsWith('@wu')) {
+      i += text.slice(i).startsWith('@walkup') ? 7 : 3;
+    }
+
+    // Dots
+    while (i < text.length && text[i] === '.') i++;
+
+    // Note value
+    if (i < text.length && /[whqest]/.test(text[i])) i++;
+
+    // Push symbols
+    if (i < text.length && (text[i] === '<' || text[i] === '>')) i++;
+
+    const chordText = text.slice(0, i);
+    const remaining = text.slice(i);
+    const chord = parseChordToken(chordText, nashvilleMode);
+    return { chord, remaining };
+  }
+
+  // Regular chord - parse base chord number first
+  const { chord: baseChord, remaining: afterBase } = parseFirstChord(text, nashvilleMode);
+  if (!baseChord) return { chord: null, remaining: text };
+
+  // Now check for modifiers that come after the base chord
+  i = text.length - afterBase.length;
+
+  // Walk indicators
+  if (text.slice(i).startsWith('@walkdown') || text.slice(i).startsWith('@wd')) {
+    i += text.slice(i).startsWith('@walkdown') ? 9 : 3;
+  } else if (text.slice(i).startsWith('@walkup') || text.slice(i).startsWith('@wu')) {
+    i += text.slice(i).startsWith('@walkup') ? 7 : 3;
+  }
+
+  // Dots (beat marks)
+  while (i < text.length && text[i] === '.') i++;
+
+  // Note value (w, h, q, e, s, t)
+  if (i < text.length && /[whqest]/.test(text[i])) i++;
+
+  // Accent
+  if (i < text.length && text[i] === '!') i++;
+
+  // Push symbols
+  if (i < text.length && (text[i] === '<' || text[i] === '>')) i++;
+
+  // Tie
+  if (i < text.length && text[i] === '=') i++;
+
+  // Fermata
+  if (i < text.length && text[i] === '~') i++;
+
+  // Parse the complete token
+  const chordText = text.slice(0, i);
+  const remaining = text.slice(i);
+  const chord = parseChordToken(chordText, nashvilleMode);
+  return { chord, remaining };
+}
+
+/**
+ * Expand tie/split bar notation into multiple chords
+ * Examples: "(1 4)" -> [1, 4], "(1144)" -> [1, 1, 4, 4], "[1234]" -> [1, 2, 3, 4]
  * Also handles endings: "1[2 4 5]" -> [2, 4, 5] with ending=1
- * Returns {chords, wasSplitBar} to indicate if this was a split bar
+ * Returns {chords, wasSplitBar} to indicate if this was a tie
  */
 function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[]; wasSplitBar: boolean } {
   // Handle endings: 1[2 4 5], 2[1 1 1], etc.
@@ -543,57 +623,48 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
     return { chords, wasSplitBar: false };
   }
 
-  // Handle underscore split bars: 1_6- or 4_3-_2_1
-  // But handle cases like 6_54 where only the first character after _ should be in split bar
-  if (token.includes('_')) {
-    const parts = token.split('_');
+  // Handle parenthesized ties: (1 4) or (1144) or (1.x..<1><mod+2>)
+  if (token.startsWith('(') && token.endsWith(')')) {
+    const inner = token.slice(1, -1).trim();
     const chords: Chord[] = [];
-    let remainingText = '';
 
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      if (!part) continue;
-
-      if (i === 0) {
-        // First part - parse as normal chord
+    // Split by spaces if present, otherwise parse character by character
+    if (inner.includes(' ')) {
+      const parts = inner.split(/\s+/);
+      parts.forEach(part => {
         const chord = parseChordToken(part, nashvilleMode);
         if (chord) chords.push(chord);
-      } else {
-        // Parts after _ - parse only ONE chord, rest goes to remaining
-        // Extract the first chord from this part
-        const firstChord = parseFirstChord(part, nashvilleMode);
-        if (firstChord.chord) {
-          chords.push(firstChord.chord);
+      });
+    } else {
+      // Parse complex tie like "1.2..<1><mod+2>" or "(12@wd3q4@wu)"
+      // Need to parse complete chord tokens with all modifiers
+      let remaining = inner;
+      while (remaining.length > 0) {
+        // Check for modulation annotation <mod+/-N>
+        const modMatch = remaining.match(/^<mod([+-]\d+)>/);
+        if (modMatch) {
+          // Apply modulation to the previous chord
+          if (chords.length > 0) {
+            const sign = modMatch[1][0] === '+' ? 1 : -1;
+            const value = parseInt(modMatch[1].substring(1), 10);
+            chords[chords.length - 1].modulation = sign * value;
+          }
+          remaining = remaining.substring(modMatch[0].length);
+          continue;
         }
-        if (firstChord.remaining) {
-          remainingText += firstChord.remaining;
+
+        // Try to parse a complete chord token with all modifiers
+        const result = parseNextCompleteChord(remaining, nashvilleMode);
+        if (result.chord) {
+          chords.push(result.chord);
+          remaining = result.remaining;
+        } else {
+          // Skip this character if we can't parse it
+          remaining = remaining.substring(1);
         }
       }
     }
 
-    // If there's remaining text after parsing split bar parts,
-    // treat them as separate ackord (not part of split bar)
-    // For example: "6_54" should be split bar [6,5] and separate chord 4
-    if (remainingText && chords.length > 0) {
-      // Parse each remaining character as a separate chord
-      const extraChords = remainingText.split('').map(c => parseChordToken(c, nashvilleMode)).filter(c => c !== null) as Chord[];
-
-      // Return split bar chords + extra chords, but mark split bar appropriately
-      // The split bar only applies to the chords from the underscore parts
-      return {
-        chords: [...chords, ...extraChords],
-        wasSplitBar: chords.length > 1
-      };
-    }
-
-    return { chords, wasSplitBar: chords.length > 1 };
-  }
-
-  // Handle parenthesized split bars: (1 4) or (3444)
-  if (token.startsWith('(') && token.endsWith(')')) {
-    const inner = token.slice(1, -1);
-    const parts = inner.includes(' ') ? inner.split(/\s+/) : inner.split('');
-    const chords = parts.map(part => parseChordToken(part, nashvilleMode)).filter(c => c !== null) as Chord[];
     return { chords, wasSplitBar: true };
   }
 

@@ -139,10 +139,13 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                               <span className="text-gray-400 text-2xl font-thin mx-2">|</span>
                             )}
 
-                            {/* Measure content - with optional split bar styling */}
-                            <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5 border-b-2 border-black pb-1' : 'gap-1'}`}>
+                            {/* Measure content - with optional tie (split bar) styling */}
+                            <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
                               {measure.chords.length > 0 ? (
                                 <>
+                                  {measure.isSplitBar && (
+                                    <span className="text-gray-400 font-light text-2xl self-center">(</span>
+                                  )}
                                   {measure.chords.map((chord) => (
                                     <ChordDisplay
                                       key={chord.id}
@@ -152,6 +155,9 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                                       fontSize={fontClass}
                                     />
                                   ))}
+                                  {measure.isSplitBar && (
+                                    <span className="text-gray-400 font-light text-2xl self-center">)</span>
+                                  )}
                                   {measure.comment && (
                                     <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
                                       {measure.comment}
@@ -193,9 +199,12 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
             section.measures.map((measure, idx) => (
               <div key={measure.id} className="flex items-center gap-4">
                 <span className="text-xs text-gray-400 w-6">{idx + 1}</span>
-                <div className="flex gap-0.5 items-end">
+                <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
                   {measure.chords.length > 0 ? (
                     <>
+                      {measure.isSplitBar && (
+                        <span className="text-gray-400 font-light text-2xl self-center">(</span>
+                      )}
                       {measure.chords.map((chord) => (
                         <ChordDisplay
                           key={chord.id}
@@ -205,6 +214,9 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                           fontSize={fontClass}
                         />
                       ))}
+                      {measure.isSplitBar && (
+                        <span className="text-gray-400 font-light text-2xl self-center">)</span>
+                      )}
                       {measure.comment && (
                         <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
                           {measure.comment}
