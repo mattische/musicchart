@@ -253,8 +253,8 @@ export default function SetlistView({
   return (
     <div className="fixed inset-0 bg-gray-50 z-50 flex flex-col">
       {/* Header/Navigation Bar */}
-      <div className={`bg-gray-800 text-white shadow-lg no-print transition-transform duration-300 ${
-        isLiveMode && !showControls ? '-translate-y-full' : 'translate-y-0'
+      <div className={`bg-gray-800 text-white shadow-lg no-print transition-all duration-300 ${
+        isLiveMode && !showControls ? 'h-0 overflow-hidden' : ''
       }`}>
         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
           {/* Top row on mobile, left on desktop */}
@@ -469,11 +469,11 @@ export default function SetlistView({
       >
         {isLiveMode ? (
           /* Live Mode - Chart Only */
-          <div className="max-w-7xl mx-auto p-2 sm:p-3 print:p-0 print:max-w-none">
+          <div className={`max-w-7xl mx-auto print:max-w-none ${showControls ? 'p-2 sm:p-3' : 'p-0'} print:p-0`}>
             <PrintHeader metadata={currentSong.metadata} />
 
-            <div className={`mt-2 sm:mt-3 print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
-              <div className="bg-white rounded-lg shadow-md p-2 sm:p-3 print:shadow-none print:p-0">
+            <div className={`${showControls ? 'mt-2 sm:mt-3' : 'mt-0'} print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
+              <div className={`bg-white ${showControls ? 'rounded-lg shadow-md p-2 sm:p-3' : 'p-4'} print:shadow-none print:p-0`}>
                 <ChordTextOutput
                   song={currentSong}
                   nashvilleMode={nashvilleMode}
@@ -504,8 +504,8 @@ export default function SetlistView({
       </div>
 
       {/* Keyboard shortcuts hint */}
-      <div className={`bg-gray-800 text-gray-400 text-xs py-2 px-4 text-center no-print transition-transform duration-300 ${
-        isLiveMode && !showControls ? 'translate-y-full' : 'translate-y-0'
+      <div className={`bg-gray-800 text-gray-400 text-xs py-2 px-4 text-center no-print transition-all duration-300 ${
+        isLiveMode && !showControls ? 'h-0 overflow-hidden py-0' : ''
       }`}>
         <span className={isLiveMode ? 'text-green-400 font-semibold' : ''}>
           {isLiveMode ? '🎸 LIVE MODE' : '✏️ EDIT MODE'}
