@@ -77,7 +77,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     if (!chord.annotation?.value) return null;
 
     return (
-      <div className="flex justify-center -mb-1 ml-1">
+      <div className="flex justify-center mb-1 ml-1">
         <span className="text-2xl text-gray-700 leading-none">
           {getNoteSymbol(chord.annotation.value)}
         </span>
