@@ -552,8 +552,14 @@ function parseNextCompleteChord(text: string, nashvilleMode: boolean): { chord: 
     // Note value
     if (i < text.length && /[whqest]/.test(text[i])) i++;
 
-    // Push symbols
-    if (i < text.length && (text[i] === '<' || text[i] === '>')) i++;
+    // Push symbols after diamond - only check for > (push late) or < if followed by non-digit
+    // Don't consume < if it might be the start of another diamond chord
+    if (i < text.length && text[i] === '>') {
+      i++;
+    } else if (i < text.length && text[i] === '<' && i + 1 < text.length && !/\d/.test(text[i + 1])) {
+      // Only consume < if next char is not a digit (meaning it's push, not a new diamond)
+      i++;
+    }
 
     const chordText = text.slice(0, i);
     const remaining = text.slice(i);

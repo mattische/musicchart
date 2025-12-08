@@ -12,7 +12,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   // Handle separator (*)
   if (chord.number === '*') {
     return (
-      <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-center mb-1">
+      <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-end">
         <div className="w-2 h-2 bg-black rounded-full print:bg-black"></div>
       </div>
     );
@@ -59,14 +59,14 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     }
   };
 
-  // Render beat marks above the chord (horizontal lines)
+  // Render beat marks above the chord (vertical lines)
   const renderBeats = () => {
     if (!chord.beats || chord.beats === 0) return null;
 
     return (
-      <div className="flex gap-0.5 justify-center mb-1">
+      <div className="flex gap-0.5 justify-center mb-0.5">
         {Array.from({ length: chord.beats }).map((_, i) => (
-          <span key={i} className="inline-block h-[2px] w-3 bg-black"></span>
+          <span key={i} className="inline-block w-[2px] h-2 bg-black"></span>
         ))}
       </div>
     );
@@ -77,7 +77,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     if (!chord.annotation?.value) return null;
 
     return (
-      <div className="flex justify-center mb-0.5">
+      <div className="flex justify-center mb-0">
         <span className="text-2xl text-gray-700">
           {getNoteSymbol(chord.annotation.value)}
         </span>
