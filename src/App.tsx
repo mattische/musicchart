@@ -14,6 +14,7 @@ function App() {
   const [fitToPage, setFitToPage] = useState(true); // Default to true
   const [fontSize, setFontSize] = useState('normal');
   const [openSetlist, setOpenSetlist] = useState<Setlist | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [song, setSong] = useState<Song>({
     id: 'new-song',
     metadata: {
@@ -86,6 +87,22 @@ function App() {
 
   const updateSong = (updatedSong: Song) => {
     setSong(updatedSong);
+
+    // Auto-save after 1 second of inactivity
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      if (updatedSong.id && !updatedSong.id.startsWith('new-') && !updatedSong.id.startsWith('loaded-')) {
+        try {
+          await saveChart(updatedSong);
+          console.log('Auto-saved chart:', updatedSong.metadata.title);
+        } catch (error) {
+          console.error('Auto-save error:', error);
+        }
+      }
+    }, 1000);
   };
 
   const handleLoadFile = (text: string) => {
