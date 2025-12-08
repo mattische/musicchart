@@ -7,6 +7,7 @@ import NewToolbar from './components/NewToolbar';
 import ChordTextEditor from './components/ChordTextEditor';
 import PrintHeader from './components/PrintHeader';
 import SetlistView from './components/SetlistView';
+import SaveChartDialog from './components/SaveChartDialog';
 
 function App() {
   const [nashvilleMode, setNashvilleMode] = useState(true);
@@ -43,6 +44,7 @@ function App() {
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const autoSaveStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   // Auto-save when song changes (debounced)
   useEffect(() => {
@@ -131,6 +133,27 @@ function App() {
   const handleChartSaved = (chartId: string) => {
     // Update song ID to reflect it's been saved
     setSong(prev => ({ ...prev, id: chartId }));
+    setAutoSaveStatus('saved');
+  };
+
+  const handleManualSave = async () => {
+    const isSavedChart = song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-');
+
+    if (isSavedChart) {
+      // Chart is already saved, just save changes
+      setAutoSaveStatus('saving');
+      try {
+        await saveChart(song);
+        setAutoSaveStatus('saved');
+        setTimeout(() => setAutoSaveStatus('idle'), 2000);
+      } catch (error) {
+        console.error('Save failed:', error);
+        setAutoSaveStatus('idle');
+      }
+    } else {
+      // New chart, show save dialog
+      setShowSaveDialog(true);
+    }
   };
 
   return (
@@ -167,18 +190,30 @@ function App() {
         <div className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">
           <PrintHeader metadata={song.metadata} />
 
-          {/* Auto-save status indicator */}
-          {autoSaveStatus !== 'idle' && (
-            <div className="no-print flex justify-end mb-2">
-              <div className={`text-sm px-3 py-1 rounded-full ${
+          {/* Save button with status indicator */}
+          <div className="no-print flex justify-end mb-2">
+            <button
+              onClick={handleManualSave}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 autoSaveStatus === 'saving'
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-green-100 text-green-700'
-              }`}>
-                {autoSaveStatus === 'saving' ? '💾 Saving...' : '✓ Saved'}
-              </div>
-            </div>
-          )}
+                  ? 'bg-yellow-500 text-white cursor-wait'
+                  : autoSaveStatus === 'saved'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-')
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-purple-600 text-white hover:bg-purple-700'
+              }`}
+              disabled={autoSaveStatus === 'saving'}
+            >
+              {autoSaveStatus === 'saving'
+                ? '💾 Sparar...'
+                : autoSaveStatus === 'saved'
+                ? '✓ Sparad'
+                : song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-')
+                ? '💾 Spara'
+                : '💾 Spara som...'}
+            </button>
+          </div>
 
           <div className={`mt-8 print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
             <ChordTextEditor
@@ -203,6 +238,17 @@ function App() {
         twoColumnLayout={twoColumnLayout}
         fitToPage={fitToPage}
         fontSize={fontSize}
+      />
+
+      {/* Save Chart Dialog */}
+      <SaveChartDialog
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        song={song}
+        onSaved={(chartId) => {
+          handleChartSaved(chartId);
+          setShowSaveDialog(false);
+        }}
       />
     </>
   );

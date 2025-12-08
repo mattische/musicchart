@@ -143,7 +143,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                             <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
                               {measure.chords.length > 0 ? (
                                 <>
-                                  {measure.isSplitBar && (
+                                  {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
                                     <span className="text-black font-light text-4xl self-end mb-1">(</span>
                                   )}
                                   {measure.chords.map((chord) => (
@@ -155,7 +155,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                                       fontSize={fontClass}
                                     />
                                   ))}
-                                  {measure.isSplitBar && (
+                                  {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
                                     <span className="text-black font-light text-4xl self-end mb-1">)</span>
                                   )}
                                   {measure.comment && (
@@ -202,7 +202,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                 <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
                   {measure.chords.length > 0 ? (
                     <>
-                      {measure.isSplitBar && (
+                      {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
                         <span className="text-black font-light text-4xl self-end mb-1">(</span>
                       )}
                       {measure.chords.map((chord) => (
@@ -214,7 +214,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                           fontSize={fontClass}
                         />
                       ))}
-                      {measure.isSplitBar && (
+                      {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
                         <span className="text-black font-light text-4xl self-end mb-1">)</span>
                       )}
                       {measure.comment && (

@@ -465,14 +465,16 @@ function isEndingToken(token: string): boolean {
 
 /**
  * Check if a token is a split bar (tie)
- * Only parentheses create ties now (not underscores)
+ * Parentheses create ties with parentheses
+ * Underscores create ties with underline styling
  */
 function isSplitBarToken(token: string): boolean {
   // Exclude endings from split bars
   if (isEndingToken(token)) return false;
 
   return (token.startsWith('(') && token.endsWith(')')) ||
-         (token.startsWith('[') && token.endsWith(']'));
+         (token.startsWith('[') && token.endsWith(']')) ||
+         token.includes('_');
 }
 
 /**
@@ -526,8 +528,8 @@ function parseFirstChord(text: string, nashvilleMode: boolean): { chord: Chord |
   }
   i++; // Consume the digit
 
-  // Check for quality markers (-, +, o, ^, M)
-  while (i < text.length && /[-+o^M]/.test(text[i])) i++;
+  // Check for quality markers (-, +, o, ^, M, m)
+  while (i < text.length && /[-+o^Mm]/.test(text[i])) i++;
 
   // Check for extensions (sus4, add9, D7, **7, **^7, etc.)
   if (i < text.length) {
@@ -666,13 +668,14 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
   if (endingMatch) {
     const endingNumber = parseInt(endingMatch[1], 10);
     const inner = endingMatch[2].trim();
-    const parts = inner.includes(' ') ? inner.split(/\s+/) : inner.split('');
-    const chords = parts.map(part => parseChordToken(part, nashvilleMode)).filter(c => c !== null) as Chord[];
 
-    // Add ending number to all chords in this ending
-    chords.forEach(chord => {
-      chord.ending = endingNumber;
-    });
+    // Parse the inner content, which could include ties and complex tokens
+    const { chords } = parseChords(inner, nashvilleMode);
+
+    // Add ending number only to the first chord
+    if (chords.length > 0) {
+      chords[0].ending = endingNumber;
+    }
 
     return { chords, wasSplitBar: false };
   }
@@ -682,11 +685,15 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
     const inner = token.slice(1, -1).trim();
     const chords: Chord[] = [];
 
+    console.log('[expandSplitBar] Parens tie:', { token, inner });
+
     // Split by spaces if present, otherwise parse character by character
     if (inner.includes(' ')) {
       const parts = inner.split(/\s+/);
+      console.log('[expandSplitBar] Parts:', parts);
       parts.forEach(part => {
         const chord = parseChordToken(part, nashvilleMode);
+        console.log('[expandSplitBar] Parsed part:', { part, chord });
         if (chord) chords.push(chord);
       });
     } else {
@@ -730,6 +737,25 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
     return { chords, wasSplitBar: true };
   }
 
+  // Handle underscore ties: 5..._1. or 1_2_3
+  // These create underlined chords (no visual parentheses)
+  if (token.includes('_')) {
+    console.log('[expandSplitBar] Underscore tie:', token);
+    const parts = token.split('_').filter(p => p.trim()); // Filter out empty parts
+    console.log('[expandSplitBar] Underscore parts:', parts);
+    const chords = parts.map(part => {
+      const chord = parseChordToken(part.trim(), nashvilleMode);
+      console.log('[expandSplitBar] Parsed underscore part:', { part, chord });
+      if (chord) {
+        // Add underscore to number to trigger underline rendering
+        chord.number = chord.number + '_';
+      }
+      return chord;
+    }).filter(c => c !== null) as Chord[];
+    console.log('[expandSplitBar] Final underscore chords:', chords);
+    return { chords, wasSplitBar: true };
+  }
+
   // Regular single chord
   const chord = parseChordToken(token, nashvilleMode);
   return { chords: chord ? [chord] : [], wasSplitBar: false };
@@ -755,16 +781,6 @@ function parseChordToken(token: string, nashvilleMode: boolean): Chord | null {
       id: '',
       number: '%',
       nashvilleMode,
-    };
-  }
-
-  // Handle no chord / rest (X)
-  if (token === 'X' || token.startsWith('X_')) {
-    return {
-      id: '',
-      number: token,
-      nashvilleMode,
-      isRest: true,
     };
   }
 
@@ -839,24 +855,27 @@ function parseChordToken(token: string, nashvilleMode: boolean): Chord | null {
     workingToken = workingToken.slice(0, -1);
   }
 
-  // Count tick marks (dots for beats)
-  const dotMatch = workingToken.match(/\.+$/);
-  if (dotMatch) {
-    beats = dotMatch[0].length;
-    workingToken = workingToken.replace(/\.+$/, '');
-  }
-
-  // Check for note value suffix (w, h, q, e, s, t)
+  // Check for note value suffix (w, h, q, e, s, t) - extract this BEFORE dots
   const noteValueMatch = workingToken.match(/([whqest])$/);
   if (noteValueMatch) {
     noteValue = noteValueMatch[1] as 'w' | 'h' | 'q' | 'e' | 's' | 't';
     workingToken = workingToken.slice(0, -1);
   }
 
+  // Count tick marks (dots for beats) - extract AFTER note value
+  const dotMatch = workingToken.match(/\.+$/);
+  if (dotMatch) {
+    beats = dotMatch[0].length;
+    workingToken = workingToken.replace(/\.+$/, '');
+  }
+
   // The rest is the chord number/name (can include accidentals like #5, b7)
   const number = workingToken.trim();
 
   if (!number) return null;
+
+  // Check if this is a rest (X or x, case-insensitive)
+  const isRest = number.toUpperCase() === 'X' || number.toUpperCase().startsWith('X_');
 
   return {
     id: '', // Will be set by caller
@@ -870,6 +889,7 @@ function parseChordToken(token: string, nashvilleMode: boolean): Chord | null {
     modulation: modulation || undefined,
     tie: tie || undefined,
     fermata: fermata || undefined,
+    isRest: isRest || undefined,
     inlineComment: inlineComment || undefined,
     annotation: noteValue ? { value: noteValue } : undefined,
   };

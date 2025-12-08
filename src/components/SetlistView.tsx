@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Song } from '../types/song';
 import { Setlist } from '../db/database';
 import { getChartsInSetlist, saveChart, updateSetlistItemOrder } from '../db/operations';
@@ -37,6 +37,9 @@ export default function SetlistView({
   const [showSongMenu, setShowSongMenu] = useState(false); // Show/hide song menu in Edit Mode
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isOpen && setlist) {
@@ -87,15 +90,39 @@ export default function SetlistView({
     }
   };
 
-  const handleUpdateSong = async (updatedSong: Song) => {
-    // Auto-save changes
-    await saveChart(updatedSong);
-
-    // Update local state
+  const handleUpdateSong = (updatedSong: Song) => {
+    // Update local state immediately
     setCurrentSong(updatedSong);
     const newCharts = [...charts];
     newCharts[currentIndex] = updatedSong;
     setCharts(newCharts);
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    setSaveStatus('saving');
+
+    // Debounced auto-save (1 second)
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await saveChart(updatedSong);
+        setSaveStatus('saved');
+        console.log('✓ Auto-saved:', updatedSong.metadata.title);
+
+        // Clear "saved" status after 2 seconds
+        if (saveStatusTimeoutRef.current) {
+          clearTimeout(saveStatusTimeoutRef.current);
+        }
+        saveStatusTimeoutRef.current = setTimeout(() => {
+          setSaveStatus('idle');
+        }, 2000);
+      } catch (error) {
+        console.error('Auto-save failed:', error);
+        setSaveStatus('idle');
+      }
+    }, 1000);
   };
 
   const handleReorderCharts = async (newCharts: Song[]) => {
@@ -335,8 +362,14 @@ export default function SetlistView({
               </button>
             </div>
             {!isLiveMode && (
-              <div className="text-sm text-green-400">
-                ✓ Auto-save
+              <div className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                saveStatus === 'saving'
+                  ? 'bg-yellow-600 text-white'
+                  : saveStatus === 'saved'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-700 text-gray-300'
+              }`}>
+                {saveStatus === 'saving' ? '💾 Sparar...' : saveStatus === 'saved' ? '✓ Sparad' : '💾 Autosave'}
               </div>
             )}
           </div>

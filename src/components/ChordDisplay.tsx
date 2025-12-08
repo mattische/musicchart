@@ -27,11 +27,12 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     );
   }
 
-  // Handle no chord / rest (X)
-  if (chord.isRest || chord.number === 'X' || chord.number.startsWith('X_')) {
+  // Handle no chord / rest (X or x) - but allow beats/dots above
+  const isRestChord = chord.isRest || chord.number.toUpperCase() === 'X' || chord.number.toUpperCase().startsWith('X_');
+  if (isRestChord && !chord.beats) {
     return (
       <div className="relative inline-flex flex-col items-center min-w-[16px]">
-        <span className={`${fontSize} font-bold text-black`}>{chord.number}</span>
+        <span className={`${fontSize} font-bold text-black`}>{chord.number.toUpperCase()}</span>
       </div>
     );
   }
@@ -39,6 +40,11 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   let displayNumber = nashvilleMode
     ? chord.number
     : nashvilleToChord(chord.number, songKey as any);
+
+  // For rest chords, ensure uppercase X
+  if (isRestChord) {
+    displayNumber = displayNumber.toUpperCase();
+  }
 
   // Check if chord has underline and remove underscore from display
   const hasUnderline = displayNumber.includes('_');
@@ -50,6 +56,13 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   const accidentalMatch = displayNumber.match(/^([#b])(.*)/);
   const accidental = accidentalMatch ? accidentalMatch[1] : '';
   const chordWithoutAccidental = accidentalMatch ? accidentalMatch[2] : displayNumber;
+
+  // Extract quality markers (m should be rendered lighter, - is rendered normal)
+  // Pattern: base number + optional quality (m, -, +, o, ^, M) + optional extensions
+  const qualityMatch = chordWithoutAccidental.match(/^(\d+)(m|[-+o^M])?(.*)/);
+  const baseNumber = qualityMatch ? qualityMatch[1] : chordWithoutAccidental;
+  const quality = qualityMatch ? qualityMatch[2] : '';
+  const extensions = qualityMatch ? qualityMatch[3] : '';
 
   // Get note symbol from value
   const getNoteSymbol = (value: string) => {
@@ -86,7 +99,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     const marginClass = chord.diamond ? 'mb-2' : 'mb-1';
 
     return (
-      <div className={`flex justify-center ${marginClass} ml-1`}>
+      <div className={`flex justify-center ${marginClass}`}>
         <span className="text-3xl text-gray-700 leading-none font-bold" style={{ fontFamily: "'Noto Music', sans-serif" }}>
           {symbol}
         </span>
@@ -108,16 +121,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   };
 
   return (
-    <div className="relative inline-flex flex-col items-center min-w-[16px]">
-      {/* Ending number above chord (shown as circle) */}
-      {chord.ending && (
-        <div className="flex justify-center mb-1">
-          <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-bold text-black">
-            {chord.ending}
-          </span>
-        </div>
-      )}
-
+    <div className={`relative inline-flex flex-col items-center min-w-[16px] ${chord.ending ? 'ml-8' : ''}`}>
       {/* Fermata above chord */}
       {chord.fermata && (
         <div className="flex justify-center mb-0.5">
@@ -154,33 +158,47 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
 
       {/* Chord */}
       <div className="relative px-1 flex items-center">
+        {/* Ending number before chord (shown as circle) - positioned absolutely */}
+        {chord.ending && (
+          <span className="absolute -left-6 top-0 inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-extrabold text-black">
+            {chord.ending}
+          </span>
+        )}
+
         {/* Diamond (whole note) or regular chord */}
         {chord.diamond ? (
           <div className="inline-flex items-center">
             {accidental && (
-              <span className="text-sm font-bold text-black mr-0.5 self-center">{accidental}</span>
+              <span className="text-lg font-semibold italic text-black mr-0.5 self-start" style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
             )}
             <span className="inline-block relative w-8 h-8 align-baseline">
               <span className="absolute inset-0 border-2 border-black bg-white transform rotate-45"></span>
-              <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-black z-10">
-                {chordWithoutAccidental}
+              <span className="absolute inset-0 flex items-center justify-center text-base text-black z-10">
+                <span className="font-bold">{baseNumber}</span>
+                {quality && (
+                  <span className={quality === 'm' ? 'font-normal' : 'font-bold'}>{quality}</span>
+                )}
+                {extensions && <span className="font-bold">{extensions}</span>}
               </span>
             </span>
           </div>
         ) : (
           <span className="inline-flex items-baseline">
             {accidental && (
-              <span className="text-sm font-bold text-black mr-0.5">{accidental}</span>
+              <span className="text-lg font-semibold italic text-black mr-0.5 self-start" style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
             )}
             <span
-              className={`${fontSize} font-bold text-black`}
+              className={`${fontSize} text-black inline-flex items-baseline`}
               style={{
                 borderBottom: hasUnderline ? '2px solid black' : '2px solid transparent',
-                display: 'inline-block',
                 paddingBottom: '0px'
               }}
             >
-              {chordWithoutAccidental}
+              <span className="font-bold">{baseNumber}</span>
+              {quality && (
+                <span className={quality === 'm' ? 'font-normal' : 'font-bold'}>{quality}</span>
+              )}
+              {extensions && <span className="font-bold">{extensions}</span>}
             </span>
           </span>
         )}
