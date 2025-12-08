@@ -12,7 +12,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   // Handle separator (*)
   if (chord.number === '*') {
     return (
-      <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-end">
+      <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-end mb-1">
         <div className="w-2 h-2 bg-black rounded-full print:bg-black"></div>
       </div>
     );
@@ -77,8 +77,8 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     if (!chord.annotation?.value) return null;
 
     return (
-      <div className="flex justify-center mb-0">
-        <span className="text-2xl text-gray-700">
+      <div className="flex justify-center -mb-1">
+        <span className="text-2xl text-gray-700 leading-none">
           {getNoteSymbol(chord.annotation.value)}
         </span>
       </div>
