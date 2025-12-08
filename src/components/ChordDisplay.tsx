@@ -12,7 +12,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   // Handle separator (*)
   if (chord.number === '*') {
     return (
-      <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-end mb-1">
+      <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-end mb-3">
         <div className="w-2 h-2 bg-black rounded-full print:bg-black"></div>
       </div>
     );
