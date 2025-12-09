@@ -90,7 +90,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
         {/* Section Name - only show if not a default section */}
         {!isDefaultSection && (
           <div className="mb-0.5">
-            <h3 className="text-base font-bold text-gray-900 inline-block print:text-lg">
+            <h3 className={`${fontClass} font-normal text-gray-900 inline-block`}>
               {section.name}
             </h3>
           </div>
