@@ -102,9 +102,9 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     // Half note (h), sixteenth note (s), and 32nd note (t) are naturally larger
     const getScale = (value: string) => {
       switch (value) {
-        case 'h': return 0.85;  // Half note - scale down
-        case 's': return 0.85;  // Sixteenth note - scale down
-        case 't': return 0.85;  // 32nd note - scale down
+        case 'h': return 0.75;  // Half note - scale down more
+        case 's': return 0.75;  // Sixteenth note - scale down more
+        case 't': return 0.75;  // 32nd note - scale down more
         default: return 1.0;
       }
     };
