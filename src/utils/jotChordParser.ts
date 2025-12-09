@@ -457,20 +457,18 @@ function parseMeasureTokens(text: string, nashvilleMode: boolean): Measure[] {
 }
 
 /**
- * Check if a token is an ending (e.g., "1[...]" or "2[...]")
- */
-function isEndingToken(token: string): boolean {
-  return /^\d+\[.*\]$/.test(token);
-}
-
-/**
  * Check if a token is a split bar (tie)
  * Parentheses create ties with parentheses
  * Underscores create ties with underline styling
  */
 function isSplitBarToken(token: string): boolean {
-  // Exclude endings from split bars
-  if (isEndingToken(token)) return false;
+  // Check if it's an ending with split bar inside: e.g., 2[(1 2 3)]
+  const endingMatch = token.match(/^\d+\[(.*)\]$/);
+  if (endingMatch) {
+    const inner = endingMatch[1].trim();
+    // Check if inner content is a tie (parentheses or underscore)
+    return (inner.startsWith('(') && inner.endsWith(')')) || inner.includes('_');
+  }
 
   return (token.startsWith('(') && token.endsWith(')')) ||
          (token.startsWith('[') && token.endsWith(']')) ||
