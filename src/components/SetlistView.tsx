@@ -40,6 +40,7 @@ export default function SetlistView({
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const saveStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showSongListOverlay, setShowSongListOverlay] = useState(false);
 
   useEffect(() => {
     if (isOpen && setlist) {
@@ -261,13 +262,13 @@ export default function SetlistView({
           <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-between sm:justify-start">
             <button
               onClick={onClose}
-              className="px-2 sm:px-3 py-1 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-xs sm:text-sm"
+              className="px-3 sm:px-3 py-2 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm sm:text-sm"
             >
               ← Back
             </button>
             <button
               onClick={() => setShowSetlistManager(true)}
-              className="px-2 sm:px-3 py-1 sm:py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors text-xs sm:text-sm"
+              className="px-3 sm:px-3 py-2 sm:py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors text-sm sm:text-sm"
               title="Reorder songs in setlist"
             >
               ⇅
@@ -277,7 +278,7 @@ export default function SetlistView({
             {!isLiveMode && (
               <button
                 onClick={() => setShowSongMenu(!showSongMenu)}
-                className="px-2 sm:px-3 py-1 sm:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-xs sm:text-sm"
+                className="px-3 sm:px-3 py-2 sm:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm sm:text-sm"
                 title="Show song list"
               >
                 ≡
@@ -288,7 +289,7 @@ export default function SetlistView({
             <div className="flex sm:hidden items-center bg-gray-700 rounded-lg overflow-hidden">
               <button
                 onClick={() => setIsLiveMode(true)}
-                className={`px-2 py-1 transition-colors text-xs ${
+                className={`px-3 py-2 transition-colors text-sm ${
                   isLiveMode
                     ? 'bg-green-600 text-white'
                     : 'bg-gray-700 text-gray-300'
@@ -298,7 +299,7 @@ export default function SetlistView({
               </button>
               <button
                 onClick={() => setIsLiveMode(false)}
-                className={`px-2 py-1 transition-colors text-xs ${
+                className={`px-3 py-2 transition-colors text-sm ${
                   !isLiveMode
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-700 text-gray-300'
@@ -314,7 +315,7 @@ export default function SetlistView({
             <button
               onClick={handlePrevious}
               disabled={currentIndex === 0}
-              className="px-2 sm:px-3 py-1 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-xs sm:text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 sm:px-3 py-2 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm sm:text-sm disabled:opacity-30 disabled:cursor-not-allowed"
             >
               ←
             </button>
@@ -331,7 +332,7 @@ export default function SetlistView({
             <button
               onClick={handleNext}
               disabled={currentIndex === charts.length - 1}
-              className="px-2 sm:px-3 py-1 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-xs sm:text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 sm:px-3 py-2 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm sm:text-sm disabled:opacity-30 disabled:cursor-not-allowed"
             >
               →
             </button>
@@ -464,12 +465,54 @@ export default function SetlistView({
 
       {/* Main Content */}
       <div
-        className="flex-1 overflow-auto"
+        className="flex-1 overflow-auto relative"
         onClick={toggleControls}
       >
         {isLiveMode ? (
-          /* Live Mode - Chart Only */
-          <div className={`max-w-7xl mx-auto print:max-w-none ${showControls ? 'p-2 sm:p-3' : 'p-0'} print:p-0`}>
+          <>
+            {/* Live Mode - Chart Only */}
+            {/* Large transparent navigation buttons - only visible when controls are shown */}
+            {showControls && (
+              <>
+                {/* Previous button - left side */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrevious();
+                  }}
+                  disabled={currentIndex === 0}
+                  className="fixed left-4 top-1/2 -translate-y-1/2 z-40 w-16 h-32 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-lg transition-all disabled:opacity-10 disabled:cursor-not-allowed text-white text-4xl flex items-center justify-center"
+                >
+                  ‹
+                </button>
+
+                {/* Next button - right side */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNext();
+                  }}
+                  disabled={currentIndex === charts.length - 1}
+                  className="fixed right-4 top-1/2 -translate-y-1/2 z-40 w-16 h-32 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-lg transition-all disabled:opacity-10 disabled:cursor-not-allowed text-white text-4xl flex items-center justify-center"
+                >
+                  ›
+                </button>
+
+                {/* Song list button - center top */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSongListOverlay(true);
+                  }}
+                  className="fixed top-20 left-1/2 -translate-x-1/2 z-40 px-6 py-3 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-lg transition-all text-white text-sm flex items-center gap-2"
+                >
+                  <span className="text-xl">≡</span>
+                  <span>Songs</span>
+                </button>
+              </>
+            )}
+
+            <div className={`max-w-7xl mx-auto print:max-w-none ${showControls ? 'p-2 sm:p-3' : 'p-0'} print:p-0`}>
             <PrintHeader metadata={currentSong.metadata} />
 
             <div className={`${showControls ? 'mt-2 sm:mt-3' : 'mt-0'} print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
@@ -484,9 +527,10 @@ export default function SetlistView({
               </div>
             </div>
           </div>
+          </>
         ) : (
-          /* Edit Mode - Editor + Preview */
           <div className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">
+            {/* Edit Mode - Editor + Preview */}
             <PrintHeader metadata={currentSong.metadata} />
 
             <div className={`mt-8 print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
@@ -528,6 +572,60 @@ export default function SetlistView({
         onClose={handleSetlistManagerClose}
         onOpenSetlist={onOpenSetlist}
       />
+
+      {/* Song List Overlay - for quick navigation in Live Mode */}
+      {showSongListOverlay && (
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-70 z-50"
+            onClick={() => setShowSongListOverlay(false)}
+          />
+          <div className="fixed inset-4 md:inset-x-1/4 md:inset-y-12 bg-gray-800 rounded-lg z-50 overflow-hidden flex flex-col">
+            <div className="bg-gray-700 px-4 py-3 flex items-center justify-between">
+              <h3 className="text-white text-lg font-bold">{setlist.name}</h3>
+              <button
+                onClick={() => setShowSongListOverlay(false)}
+                className="text-white hover:text-gray-300 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-2">
+                {charts.map((chart, index) => (
+                  <button
+                    key={chart.id}
+                    onClick={() => {
+                      setCurrentIndex(index);
+                      setShowSongListOverlay(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                      index === currentIndex
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-base">
+                          {index + 1}. {chart.metadata.title}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          Key: {chart.metadata.key}
+                          {chart.metadata.tempo && ` | ${chart.metadata.tempo} BPM`}
+                        </div>
+                      </div>
+                      {index === currentIndex && (
+                        <span className="text-2xl">▶</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

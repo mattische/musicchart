@@ -144,7 +144,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                               {measure.chords.length > 0 ? (
                                 <>
                                   {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                                    <span className="text-black font-light text-4xl self-end mb-1">(</span>
+                                    <span className={`text-black font-light ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>(</span>
                                   )}
                                   {measure.chords.map((chord) => (
                                     <ChordDisplay
@@ -156,7 +156,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                                     />
                                   ))}
                                   {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                                    <span className="text-black font-light text-4xl self-end mb-1">)</span>
+                                    <span className={`text-black font-light ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
                                   )}
                                   {measure.comment && (
                                     <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
@@ -203,7 +203,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                   {measure.chords.length > 0 ? (
                     <>
                       {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                        <span className="text-black font-light text-4xl self-end mb-1">(</span>
+                        <span className={`text-black font-light ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>(</span>
                       )}
                       {measure.chords.map((chord) => (
                         <ChordDisplay
@@ -215,7 +215,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                         />
                       ))}
                       {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                        <span className="text-black font-light text-4xl self-end mb-1">)</span>
+                        <span className={`text-black font-light ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
                       )}
                       {measure.comment && (
                         <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
