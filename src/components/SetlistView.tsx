@@ -41,6 +41,61 @@ export default function SetlistView({
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const saveStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showSongListOverlay, setShowSongListOverlay] = useState(false);
+  const [liveFontSize, setLiveFontSize] = useState<string>(fontSize);
+  const [liveTwoColumn, setLiveTwoColumn] = useState<boolean>(twoColumnLayout);
+  const wakeLockRef = useRef<any>(null);
+
+  // Update live settings when props change
+  useEffect(() => {
+    setLiveFontSize(fontSize);
+    setLiveTwoColumn(twoColumnLayout);
+  }, [fontSize, twoColumnLayout]);
+
+  // Screen Wake Lock - prevent screen from sleeping in Live Mode
+  useEffect(() => {
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator && isLiveMode) {
+          wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+          console.log('Wake Lock activated');
+        }
+      } catch (err) {
+        console.error('Wake Lock error:', err);
+      }
+    };
+
+    const releaseWakeLock = async () => {
+      if (wakeLockRef.current) {
+        try {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+          console.log('Wake Lock released');
+        } catch (err) {
+          console.error('Wake Lock release error:', err);
+        }
+      }
+    };
+
+    if (isLiveMode) {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+
+    // Handle visibility change (when user switches tabs)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isLiveMode) {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      releaseWakeLock();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isLiveMode]);
 
   useEffect(() => {
     if (isOpen && setlist) {
@@ -213,6 +268,26 @@ export default function SetlistView({
   const handleDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
+  };
+
+  const increaseFontSize = () => {
+    const sizes = ['xs', 'tiny', 'small', 'normal', 'medium', 'big'];
+    const currentIndex = sizes.indexOf(liveFontSize);
+    if (currentIndex < sizes.length - 1) {
+      setLiveFontSize(sizes[currentIndex + 1]);
+    }
+  };
+
+  const decreaseFontSize = () => {
+    const sizes = ['xs', 'tiny', 'small', 'normal', 'medium', 'big'];
+    const currentIndex = sizes.indexOf(liveFontSize);
+    if (currentIndex > 0) {
+      setLiveFontSize(sizes[currentIndex - 1]);
+    }
+  };
+
+  const toggleTwoColumn = () => {
+    setLiveTwoColumn(!liveTwoColumn);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -509,6 +584,39 @@ export default function SetlistView({
                   <span className="text-xl">≡</span>
                   <span>Songs</span>
                 </button>
+
+                {/* Font size and layout controls - bottom right */}
+                <div className="fixed bottom-20 right-4 z-40 flex flex-col gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      increaseFontSize();
+                    }}
+                    disabled={liveFontSize === 'big'}
+                    className="w-12 h-12 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-lg transition-all disabled:opacity-10 disabled:cursor-not-allowed text-white text-2xl font-bold flex items-center justify-center"
+                  >
+                    A+
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      decreaseFontSize();
+                    }}
+                    disabled={liveFontSize === 'xs'}
+                    className="w-12 h-12 bg-black bg-opacity-30 hover:bg-opacity-50 rounded-lg transition-all disabled:opacity-10 disabled:cursor-not-allowed text-white text-xl font-bold flex items-center justify-center"
+                  >
+                    A-
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTwoColumn();
+                    }}
+                    className={`w-12 h-12 ${liveTwoColumn ? 'bg-blue-600 bg-opacity-70' : 'bg-black bg-opacity-30'} hover:bg-opacity-50 rounded-lg transition-all text-white text-sm font-bold flex items-center justify-center`}
+                  >
+                    2C
+                  </button>
+                </div>
               </>
             )}
 
@@ -520,9 +628,9 @@ export default function SetlistView({
                 <ChordTextOutput
                   song={currentSong}
                   nashvilleMode={nashvilleMode}
-                  twoColumnLayout={twoColumnLayout}
+                  twoColumnLayout={isLiveMode ? liveTwoColumn : twoColumnLayout}
                   fitToPage={fitToPage}
-                  fontSize={fontSize}
+                  fontSize={isLiveMode ? liveFontSize : fontSize}
                 />
               </div>
             </div>

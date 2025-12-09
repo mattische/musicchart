@@ -58,8 +58,8 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   const chordWithoutAccidental = accidentalMatch ? accidentalMatch[2] : displayNumber;
 
   // Extract quality markers (m should be rendered lighter, - is rendered normal)
-  // Pattern: base number + optional quality (m, -, +, o, ^, M) + optional extensions
-  const qualityMatch = chordWithoutAccidental.match(/^(\d+)(m|[-+o^M])?(.*)/);
+  // Pattern: base (number or letter) + optional quality (m, -, +, o, ^, M) + optional extensions
+  const qualityMatch = chordWithoutAccidental.match(/^([A-HX\d]+)(m|[-+o^M])?(.*)/i);
   const baseNumber = qualityMatch ? qualityMatch[1] : chordWithoutAccidental;
   const quality = qualityMatch ? qualityMatch[2] : '';
   const extensions = qualityMatch ? qualityMatch[3] : '';
@@ -167,7 +167,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
       {/* Modulation indicator above chord */}
       {chord.modulation && (
         <div className="flex justify-center mb-0.5">
-          <span className="text-xs text-gray-700 font-semibold">
+          <span className="text-[0.65rem] text-gray-600 font-normal leading-none">
             mod{chord.modulation > 0 ? '+' : ''}{chord.modulation}
           </span>
         </div>
@@ -196,7 +196,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
           <div className="inline-flex items-center">
             <span className="inline-block relative w-8 h-8 align-baseline">
               <span className="absolute inset-0 border-2 border-black bg-white transform rotate-45"></span>
-              <span className="absolute inset-0 flex items-center justify-center text-xs text-black z-10">
+              <span className="absolute inset-0 flex items-center justify-center text-sm text-black z-10">
                 {accidental && (
                   <span className="font-semibold italic mr-0.5" style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
                 )}
@@ -211,7 +211,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
         ) : (
           <span className="inline-flex items-baseline">
             {accidental && (
-              <span className="text-lg font-semibold italic text-black mr-0.5 self-start" style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
+              <span className={`${fontSize} font-semibold italic text-black self-start`} style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
             )}
             <span
               className={`${fontSize} text-black inline-flex items-baseline`}

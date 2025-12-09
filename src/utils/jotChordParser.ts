@@ -587,6 +587,14 @@ function parseNextCompleteChord(text: string, nashvilleMode: boolean): { chord: 
     if (i < text.length) i++; // Include the closing >
 
     // Check for additional modifiers after diamond
+    // Modulation (mod+/-N)
+    if (text.slice(i).startsWith('mod')) {
+      const modMatch = text.slice(i).match(/^mod([+-]\d+)/);
+      if (modMatch) {
+        i += modMatch[0].length;
+      }
+    }
+
     // Walk indicators
     if (text.slice(i).startsWith('@walkdown') || text.slice(i).startsWith('@wd')) {
       i += text.slice(i).startsWith('@walkdown') ? 9 : 3;
@@ -604,10 +612,91 @@ function parseNextCompleteChord(text: string, nashvilleMode: boolean): { chord: 
     // Don't consume < if it might be the start of another diamond chord
     if (i < text.length && text[i] === '>') {
       i++;
-    } else if (i < text.length && text[i] === '<' && i + 1 < text.length && !/\d/.test(text[i + 1])) {
-      // Only consume < if next char is not a digit (meaning it's push, not a new diamond)
+    } else if (i < text.length && text[i] === '<' && (i + 1 >= text.length || !/\d/.test(text[i + 1]))) {
+      // Only consume < if next char is not a digit OR we're at the end (meaning it's push, not a new diamond)
       i++;
     }
+
+    const chordText = text.slice(0, i);
+    const remaining = text.slice(i);
+    const chord = parseChordToken(chordText, nashvilleMode);
+    return { chord, remaining };
+  }
+
+  // Check for letter chords (A-H) or rest chord (X) - handle separately because parseFirstChord expects digits
+  // Can start with accidental before letter (bA, #F) or letter first (A#, Bb)
+  let startsWithAccidental = false;
+  if ((text[0] === '#' || text[0] === 'b') && text.length > 1 && /[A-HX]/.test(text[1].toUpperCase())) {
+    // Accidental before letter: bA, #F
+    startsWithAccidental = true;
+    i = 2; // Skip both accidental and letter
+  } else if (/[A-HX]/.test(text[0].toUpperCase())) {
+    // Letter first: A, F, X
+    i = 1;
+    // Check for accidental after letter (e.g., A#, Bb)
+    if (i < text.length && (text[i] === '#' || text[i] === 'b')) i++;
+  }
+
+  if (startsWithAccidental || /[A-HX]/.test(text[0].toUpperCase())) {
+
+    // Check for quality markers (-, +, o, ^, M, m)
+    while (i < text.length && /[-+o^Mm]/.test(text[i])) i++;
+
+    // Check for extensions (sus4, add9, 7, 9, 11, 13, etc.)
+    if (i < text.length) {
+      // Check for 'sus'
+      if (text.slice(i).startsWith('sus')) {
+        i += 3;
+        while (i < text.length && /\d/.test(text[i])) i++;
+      }
+      // Check for 'add'
+      else if (text.slice(i).startsWith('add')) {
+        i += 3;
+        while (i < text.length && /\d/.test(text[i])) i++;
+      }
+      // Check for numeric extensions (7, 9, 11, 13)
+      else if (/\d/.test(text[i])) {
+        while (i < text.length && /\d/.test(text[i])) i++;
+      }
+    }
+
+    // Check for slash chord (inversion)
+    if (i < text.length && text[i] === '/') {
+      i++;
+      if (i < text.length && (text[i] === '#' || text[i] === 'b')) i++;
+      if (i < text.length && /[A-H]/.test(text[i].toUpperCase())) i++;
+    }
+
+    // Now parse modifiers that come after the base chord
+    // Walk indicators
+    if (text.slice(i).startsWith('@walkdown') || text.slice(i).startsWith('@wd')) {
+      i += text.slice(i).startsWith('@walkdown') ? 9 : 3;
+    } else if (text.slice(i).startsWith('@walkup') || text.slice(i).startsWith('@wu')) {
+      i += text.slice(i).startsWith('@walkup') ? 7 : 3;
+    }
+
+    // Dots (beat marks)
+    while (i < text.length && text[i] === '.') i++;
+
+    // Note value (w, h, q, e, s, t)
+    if (i < text.length && /[whqest]/.test(text[i])) i++;
+
+    // Accent
+    if (i < text.length && text[i] === '!') i++;
+
+    // Push symbols - but don't consume < if it starts a diamond chord
+    if (i < text.length && text[i] === '>') {
+      i++;
+    } else if (i < text.length && text[i] === '<' && (i + 1 >= text.length || !/[\dA-HX]/.test(text[i + 1].toUpperCase()))) {
+      // Only consume < if it's the last character OR next char is not a digit or letter (meaning it's push, not a new diamond/chord)
+      i++;
+    }
+
+    // Tie
+    if (i < text.length && text[i] === '=') i++;
+
+    // Fermata
+    if (i < text.length && text[i] === '~') i++;
 
     const chordText = text.slice(0, i);
     const remaining = text.slice(i);
@@ -638,8 +727,13 @@ function parseNextCompleteChord(text: string, nashvilleMode: boolean): { chord: 
   // Accent
   if (i < text.length && text[i] === '!') i++;
 
-  // Push symbols
-  if (i < text.length && (text[i] === '<' || text[i] === '>')) i++;
+  // Push symbols - but don't consume < if it starts a diamond chord
+  if (i < text.length && text[i] === '>') {
+    i++;
+  } else if (i < text.length && text[i] === '<' && (i + 1 >= text.length || !/[\dA-HX]/.test(text[i + 1].toUpperCase()))) {
+    // Only consume < if it's the last character OR next char is not a digit or letter (meaning it's push, not a new diamond/chord)
+    i++;
+  }
 
   // Tie
   if (i < text.length && text[i] === '=') i++;
