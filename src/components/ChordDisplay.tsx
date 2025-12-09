@@ -109,13 +109,21 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
       }
     };
 
+    // Vertical adjustment for scaled notes to align them better with chords
+    const getTransform = (value: string) => {
+      const scale = getScale(value);
+      // Move scaled-down notes slightly down
+      const translateY = scale < 1.0 ? 'translateY(15%)' : '';
+      return `scale(${scale}) ${translateY}`.trim();
+    };
+
     return (
       <div className={`flex justify-center ${marginClass}`}>
         <span
           className="text-3xl text-gray-700 leading-none font-bold"
           style={{
             fontFamily: "'Noto Music', sans-serif",
-            transform: `scale(${getScale(chord.annotation.value)})`,
+            transform: getTransform(chord.annotation.value),
             display: 'inline-block'
           }}
         >
