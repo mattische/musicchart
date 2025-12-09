@@ -663,21 +663,22 @@ function parseNextCompleteChord(text: string, nashvilleMode: boolean): { chord: 
  * Returns {chords, wasSplitBar} to indicate if this was a tie
  */
 function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[]; wasSplitBar: boolean } {
-  // Handle endings: 1[2 4 5], 2[1 1 1], etc.
+  // Handle endings: 1[2 4 5], 2[1 1 1], 2[(1 2 3)], etc.
   const endingMatch = token.match(/^(\d+)\[(.*)\]$/);
   if (endingMatch) {
     const endingNumber = parseInt(endingMatch[1], 10);
     const inner = endingMatch[2].trim();
 
     // Parse the inner content, which could include ties and complex tokens
-    const { chords } = parseChords(inner, nashvilleMode);
+    const { chords, isSplitBar } = parseChords(inner, nashvilleMode);
 
     // Add ending number only to the first chord
     if (chords.length > 0) {
       chords[0].ending = endingNumber;
     }
 
-    return { chords, wasSplitBar: false };
+    // Preserve the split bar flag from inner content (e.g., if inner is a tie)
+    return { chords, wasSplitBar: isSplitBar };
   }
 
   // Handle parenthesized ties: (1 4) or (1144) or (1.x..<1><mod+2>)
