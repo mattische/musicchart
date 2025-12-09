@@ -684,44 +684,36 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
     const inner = token.slice(1, -1).trim();
     const chords: Chord[] = [];
 
-    console.log('[expandSplitBar] Parens tie:', { token, inner });
+    // Always use parseNextCompleteChord to handle complex syntax with dots, diamonds, etc.
+    let remaining = inner;
+    while (remaining.length > 0) {
+      // Skip whitespace
+      if (/^\s/.test(remaining)) {
+        remaining = remaining.substring(1);
+        continue;
+      }
 
-    // Split by spaces if present, otherwise parse character by character
-    if (inner.includes(' ')) {
-      const parts = inner.split(/\s+/);
-      console.log('[expandSplitBar] Parts:', parts);
-      parts.forEach(part => {
-        const chord = parseChordToken(part, nashvilleMode);
-        console.log('[expandSplitBar] Parsed part:', { part, chord });
-        if (chord) chords.push(chord);
-      });
-    } else {
-      // Parse complex tie like "1.2..<1><mod+2>" or "(12@wd3q4@wu)"
-      // Need to parse complete chord tokens with all modifiers
-      let remaining = inner;
-      while (remaining.length > 0) {
-        // Check for modulation annotation <mod+/-N>
-        const modMatch = remaining.match(/^<mod([+-]\d+)>/);
-        if (modMatch) {
-          // Apply modulation to the previous chord
-          if (chords.length > 0) {
-            const sign = modMatch[1][0] === '+' ? 1 : -1;
-            const value = parseInt(modMatch[1].substring(1), 10);
-            chords[chords.length - 1].modulation = sign * value;
-          }
-          remaining = remaining.substring(modMatch[0].length);
-          continue;
+      // Check for modulation annotation <mod+/-N>
+      const modMatch = remaining.match(/^<mod([+-]\d+)>/);
+      if (modMatch) {
+        // Apply modulation to the previous chord
+        if (chords.length > 0) {
+          const sign = modMatch[1][0] === '+' ? 1 : -1;
+          const value = parseInt(modMatch[1].substring(1), 10);
+          chords[chords.length - 1].modulation = sign * value;
         }
+        remaining = remaining.substring(modMatch[0].length);
+        continue;
+      }
 
-        // Try to parse a complete chord token with all modifiers
-        const result = parseNextCompleteChord(remaining, nashvilleMode);
-        if (result.chord) {
-          chords.push(result.chord);
-          remaining = result.remaining;
-        } else {
-          // Skip this character if we can't parse it
-          remaining = remaining.substring(1);
-        }
+      // Try to parse a complete chord token with all modifiers
+      const result = parseNextCompleteChord(remaining, nashvilleMode);
+      if (result.chord) {
+        chords.push(result.chord);
+        remaining = result.remaining;
+      } else {
+        // Skip this character if we can't parse it
+        remaining = remaining.substring(1);
       }
     }
 
