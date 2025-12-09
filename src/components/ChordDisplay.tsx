@@ -168,12 +168,12 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
         {/* Diamond (whole note) or regular chord */}
         {chord.diamond ? (
           <div className="inline-flex items-center">
-            {accidental && (
-              <span className="text-lg font-semibold italic text-black mr-0.5 self-start" style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
-            )}
             <span className="inline-block relative w-8 h-8 align-baseline">
               <span className="absolute inset-0 border-2 border-black bg-white transform rotate-45"></span>
-              <span className="absolute inset-0 flex items-center justify-center text-base text-black z-10">
+              <span className="absolute inset-0 flex items-center justify-center text-xs text-black z-10">
+                {accidental && (
+                  <span className="font-semibold italic mr-0.5" style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
+                )}
                 <span className="font-bold">{baseNumber}</span>
                 {quality && (
                   <span className={quality === 'm' ? 'font-normal' : 'font-bold'}>{quality}</span>
