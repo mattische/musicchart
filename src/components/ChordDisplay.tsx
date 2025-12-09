@@ -98,9 +98,26 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     // More space above diamond chords
     const marginClass = chord.diamond ? 'mb-2' : 'mb-1';
 
+    // Scale adjustments for consistent note sizes
+    // Half note (h) and sixteenth note (s) are naturally larger
+    const getScale = (value: string) => {
+      switch (value) {
+        case 'h': return 0.85;  // Half note - scale down
+        case 's': return 0.85;  // Sixteenth note - scale down
+        default: return 1.0;
+      }
+    };
+
     return (
       <div className={`flex justify-center ${marginClass}`}>
-        <span className="text-3xl text-gray-700 leading-none font-bold" style={{ fontFamily: "'Noto Music', sans-serif" }}>
+        <span
+          className="text-3xl text-gray-700 leading-none font-bold"
+          style={{
+            fontFamily: "'Noto Music', sans-serif",
+            transform: `scale(${getScale(chord.annotation.value)})`,
+            display: 'inline-block'
+          }}
+        >
           {symbol}
         </span>
       </div>
