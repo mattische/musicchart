@@ -99,11 +99,11 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     const marginClass = chord.diamond ? 'mb-2' : 'mb-1';
 
     // Scale adjustments for consistent note sizes
-    // Half note (h) and sixteenth note (s) are naturally larger
+    // Quarter note (q) and eighth note (e) are naturally smaller
     const getScale = (value: string) => {
       switch (value) {
-        case 'h': return 0.85;  // Half note - scale down
-        case 's': return 0.85;  // Sixteenth note - scale down
+        case 'q': return 1.15;  // Quarter note - scale up
+        case 'e': return 1.15;  // Eighth note - scale up
         default: return 1.0;
       }
     };
