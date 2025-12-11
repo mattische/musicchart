@@ -1,4 +1,4 @@
-import { Chord, Section, Measure, SongMetadata, NavigationMarker, NavigationMarkerType } from '../types/song';
+import { Chord, Section, Measure, SongMetadata, NavigationMarker } from '../types/song';
 
 export interface ParsedLine {
   type: 'section' | 'measures' | 'empty' | 'metadata';
