@@ -13,7 +13,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   if (chord.number === '*') {
     return (
       <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-end mb-3">
-        <div className="w-2 h-2 bg-black rounded-full print:bg-black"></div>
+        <div className="w-2 h-2 bg-black dark:bg-white rounded-full print:bg-black"></div>
       </div>
     );
   }
@@ -22,7 +22,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   if (chord.number === '%') {
     return (
       <div className="relative inline-flex flex-col items-center min-w-[16px]">
-        <span className={`${fontSize} font-bold text-black`}>%</span>
+        <span className={`${fontSize} font-bold text-black dark:text-white print:text-black`}>%</span>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   if (isRestChord && !chord.beats) {
     return (
       <div className="relative inline-flex flex-col items-center min-w-[16px]">
-        <span className={`${fontSize} font-bold text-black`}>{chord.number.toUpperCase()}</span>
+        <span className={`${fontSize} font-bold text-black dark:text-white print:text-black`}>{chord.number.toUpperCase()}</span>
       </div>
     );
   }
@@ -84,7 +84,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     return (
       <div className="flex gap-0.5 justify-center mb-0.5">
         {Array.from({ length: chord.beats }).map((_, i) => (
-          <span key={i} className="inline-block w-[2px] h-2 bg-black"></span>
+          <span key={i} className="inline-block w-[2px] h-2 bg-black dark:bg-white print:bg-black"></span>
         ))}
       </div>
     );
@@ -120,7 +120,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     return (
       <div className={`flex justify-center ${marginClass}`}>
         <span
-          className="text-3xl text-gray-700 leading-none font-bold"
+          className="text-3xl text-gray-700 dark:text-gray-300 print:text-gray-700 leading-none font-bold"
           style={{
             fontFamily: "'Noto Music', sans-serif",
             transform: getTransform(chord.annotation.value),
@@ -139,7 +139,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
 
     return (
       <div className="flex justify-center mb-0.5">
-        <span className="text-black font-bold text-lg">
+        <span className="text-black dark:text-white print:text-black font-bold text-lg">
           {chord.push === 'early' ? '<' : '>'}
         </span>
       </div>
@@ -151,7 +151,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
       {/* Fermata above chord */}
       {chord.fermata && (
         <div className="flex justify-center mb-0">
-          <span className="text-2xl text-black leading-none" style={{ fontFamily: "'Noto Music', sans-serif" }}>𝄐</span>
+          <span className="text-2xl text-black dark:text-white print:text-black leading-none" style={{ fontFamily: "'Noto Music', sans-serif" }}>𝄐</span>
         </div>
       )}
 
@@ -167,7 +167,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
       {/* Modulation indicator above chord */}
       {chord.modulation && (
         <div className="flex justify-center mb-0.5">
-          <span className="text-[0.65rem] text-gray-600 font-normal leading-none">
+          <span className="text-[0.65rem] text-gray-600 dark:text-gray-400 print:text-gray-600 font-normal leading-none">
             mod{chord.modulation > 0 ? '+' : ''}{chord.modulation}
           </span>
         </div>
@@ -176,7 +176,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
       {/* Inline comment above chord */}
       {chord.inlineComment && (
         <div className="flex justify-center mb-0.5">
-          <span className="text-xs text-gray-600 italic">
+          <span className="text-xs text-gray-600 dark:text-gray-400 print:text-gray-600 italic">
             {chord.inlineComment}
           </span>
         </div>
@@ -186,7 +186,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
       <div className="relative px-1 flex items-center">
         {/* Ending number before chord (shown as circle) - positioned absolutely */}
         {chord.ending && (
-          <span className="absolute -left-6 top-0 inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-extrabold text-black">
+          <span className="absolute -left-6 top-0 inline-flex items-center justify-center w-5 h-5 border-2 border-black dark:border-white print:border-black rounded-full text-xs font-extrabold text-black dark:text-white print:text-black">
             {chord.ending}
           </span>
         )}
@@ -195,8 +195,8 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
         {chord.diamond ? (
           <div className="inline-flex items-center">
             <span className="inline-block relative w-8 h-8 align-baseline">
-              <span className="absolute inset-0 border-2 border-black bg-white transform rotate-45"></span>
-              <span className="absolute inset-0 flex items-center justify-center text-sm text-black z-10">
+              <span className="absolute inset-0 border-2 border-black dark:border-white print:border-black bg-white dark:bg-gray-800 print:bg-white transform rotate-45"></span>
+              <span className="absolute inset-0 flex items-center justify-center text-sm text-black dark:text-white print:text-black z-10">
                 {accidental && (
                   <span className="font-semibold italic mr-0.5" style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
                 )}
@@ -211,12 +211,12 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
         ) : (
           <span className="inline-flex items-baseline">
             {accidental && (
-              <span className={`${fontSize} font-semibold italic text-black self-start`} style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
+              <span className={`${fontSize} font-semibold italic text-black dark:text-white print:text-black self-start`} style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
             )}
             <span
-              className={`${fontSize} text-black inline-flex items-baseline`}
+              className={`${fontSize} text-black dark:text-white print:text-black inline-flex items-baseline`}
               style={{
-                borderBottom: hasUnderline ? '2px solid black' : '2px solid transparent',
+                borderBottom: hasUnderline ? '2px solid currentColor' : '2px solid transparent',
                 paddingBottom: '0px'
               }}
             >
@@ -231,17 +231,17 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
 
         {/* Tie (=) - directly after chord */}
         {chord.tie && (
-          <span className={`text-black font-bold ${fontSize} ml-0.5`}>=</span>
+          <span className={`text-black dark:text-white print:text-black font-bold ${fontSize} ml-0.5`}>=</span>
         )}
 
         {/* Accent mark (!) - directly after chord */}
         {chord.accent && (
-          <span className={`text-black font-bold ${fontSize} ml-0.5`}>!</span>
+          <span className={`text-black dark:text-white print:text-black font-bold ${fontSize} ml-0.5`}>!</span>
         )}
 
         {/* Walk indicators (@wd/@wu) - directly after chord */}
         {chord.walk && (
-          <span className={`text-black font-bold ${fontSize} ml-0.5`}>
+          <span className={`text-black dark:text-white print:text-black font-bold ${fontSize} ml-0.5`}>
             {chord.walk === 'down' ? '↘' : '↗'}
           </span>
         )}

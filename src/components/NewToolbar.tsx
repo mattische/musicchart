@@ -8,7 +8,7 @@ import ChartLibrary from './ChartLibrary';
 import SetlistManager from './SetlistManager';
 import SaveChartDialog from './SaveChartDialog';
 import UserGuideModal from './UserGuideModal';
-import { exportAllData, importData, createSetlist } from '../db/operations';
+import { exportAllData, importData, createSetlist, exportSetlist, getAllSetlists, getChartsInSetlist } from '../db/operations';
 
 interface ToolbarProps {
   nashvilleMode: boolean;
@@ -25,6 +25,16 @@ interface ToolbarProps {
   onOpenSetlist: (setlist: Setlist) => void;
   fontSize: string;
   onFontSizeChange: (size: string) => void;
+  fontFamily: string;
+  onFontFamilyChange: (font: string) => void;
+  darkMode: boolean;
+  onToggleDarkMode: () => void;
+  alignment: string;
+  onAlignmentChange: (alignment: string) => void;
+  showLayoutGuide: boolean;
+  onToggleLayoutGuide: () => void;
+  optimizeForScreen: boolean;
+  onToggleOptimizeForScreen: () => void;
 }
 
 export default function NewToolbar({
@@ -41,7 +51,17 @@ export default function NewToolbar({
   onChartSaved,
   onOpenSetlist,
   fontSize,
-  onFontSizeChange
+  onFontSizeChange,
+  fontFamily,
+  onFontFamilyChange,
+  darkMode,
+  onToggleDarkMode,
+  alignment,
+  onAlignmentChange,
+  showLayoutGuide,
+  onToggleLayoutGuide,
+  optimizeForScreen,
+  onToggleOptimizeForScreen
 }: ToolbarProps) {
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
@@ -50,6 +70,10 @@ export default function NewToolbar({
   const [showSetlistManager, setShowSetlistManager] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showUserGuide, setShowUserGuide] = useState(false);
+  const [showExportSetlistDialog, setShowExportSetlistDialog] = useState(false);
+  const [availableSetlists, setAvailableSetlists] = useState<Setlist[]>([]);
+  const [selectedSetlistIds, setSelectedSetlistIds] = useState<string[]>([]);
+  const [setlistChartCounts, setSetlistChartCounts] = useState<Record<string, number>>({});
 
   const handleLoadFromFile = () => {
     setShowFileMenu(false);
@@ -210,6 +234,114 @@ export default function NewToolbar({
       console.error('Create setlist error:', error);
       alert('Failed to create setlist.');
     }
+  };
+
+  const handleExportSetlist = async () => {
+    setShowFileMenu(false);
+
+    try {
+      const setlists = await getAllSetlists();
+
+      if (setlists.length === 0) {
+        alert('No setlists found to export.');
+        return;
+      }
+
+      // Load chart counts for each setlist
+      const counts: Record<string, number> = {};
+      for (const setlist of setlists) {
+        const charts = await getChartsInSetlist(setlist.id);
+        counts[setlist.id] = charts.length;
+      }
+
+      setAvailableSetlists(setlists);
+      setSetlistChartCounts(counts);
+      setSelectedSetlistIds([]);
+      setShowExportSetlistDialog(true);
+    } catch (error) {
+      console.error('Error loading setlists:', error);
+      alert('Failed to load setlists.');
+    }
+  };
+
+  const handleConfirmExportSetlist = async () => {
+    if (selectedSetlistIds.length === 0) {
+      alert('Please select at least one setlist to export.');
+      return;
+    }
+
+    try {
+      const date = new Date().toISOString().split('T')[0];
+
+      if (selectedSetlistIds.length === 1) {
+        // Single setlist export
+        const selectedSetlist = availableSetlists.find(s => s.id === selectedSetlistIds[0]);
+        if (!selectedSetlist) return;
+
+        const data = await exportSetlist(selectedSetlist.id);
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        const sanitizedName = selectedSetlist.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+        a.download = `setlist-${sanitizedName}-${date}.json`;
+
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // Multiple setlists export - combine into one file
+        let combinedData = {
+          version: 1,
+          exportedAt: Date.now(),
+          charts: [] as any[],
+          setlists: [] as any[],
+          setlistItems: [] as any[]
+        };
+
+        for (const setlistId of selectedSetlistIds) {
+          const data = await exportSetlist(setlistId);
+
+          // Merge charts (avoid duplicates)
+          data.charts.forEach(chart => {
+            if (!combinedData.charts.find(c => c.id === chart.id)) {
+              combinedData.charts.push(chart);
+            }
+          });
+
+          // Add setlist
+          combinedData.setlists.push(...data.setlists);
+
+          // Add setlist items
+          combinedData.setlistItems.push(...data.setlistItems);
+        }
+
+        const blob = new Blob([JSON.stringify(combinedData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `setlists-${date}.json`;
+
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      setShowExportSetlistDialog(false);
+      setSelectedSetlistIds([]);
+    } catch (error) {
+      console.error('Export setlist error:', error);
+      alert('Failed to export setlist.');
+    }
+  };
+
+  const toggleSetlistSelection = (setlistId: string) => {
+    setSelectedSetlistIds(prev => {
+      if (prev.includes(setlistId)) {
+        return prev.filter(id => id !== setlistId);
+      } else {
+        return [...prev, setlistId];
+      }
+    });
   };
 
   const handleExportAllData = async () => {
@@ -435,6 +567,12 @@ x. x.. % %`;
                     >
                       Create New Setlist
                     </button>
+                    <button
+                      onClick={handleExportSetlist}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                    >
+                      Export Setlist
+                    </button>
                     <div className="border-t border-gray-200 my-1"></div>
                     <div className="px-4 py-2 text-xs text-gray-500 font-semibold">DATA</div>
                     <button
@@ -510,6 +648,31 @@ x. x.. % %`;
                 </button>
                 {showSettingsMenu && (
                   <div className="absolute top-full right-0 mt-1 bg-white text-gray-800 rounded-lg shadow-lg py-1 z-50 min-w-[200px]">
+                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold">APPEARANCE</div>
+                    <button
+                      onClick={() => { onToggleDarkMode(); setShowSettingsMenu(false); }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                    >
+                      {darkMode ? '✓ Dark Mode' : 'Light Mode'}
+                    </button>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold">FONT FAMILY</div>
+                    {[
+                      { value: 'inter', label: 'Inter' },
+                      { value: 'roboto', label: 'Roboto' },
+                      { value: 'opensans', label: 'Open Sans' },
+                      { value: 'lato', label: 'Lato' },
+                      { value: 'system', label: 'System Default' }
+                    ].map(font => (
+                      <button
+                        key={font.value}
+                        onClick={() => { onFontFamilyChange(font.value); setShowSettingsMenu(false); }}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-100 text-sm ${fontFamily === font.value ? 'bg-blue-50 text-blue-600' : ''}`}
+                      >
+                        {fontFamily === font.value ? '✓ ' : ''}{font.label}
+                      </button>
+                    ))}
+                    <div className="border-t border-gray-200 my-1"></div>
                     <div className="px-4 py-2 text-xs text-gray-500 font-semibold">FONT SIZE</div>
                     {['small', 'normal', 'medium', 'big'].map(size => (
                       <button
@@ -534,6 +697,33 @@ x. x.. % %`;
                     >
                       {fitToPage ? '✓ ' : ''}Fit to Page
                     </button>
+                    <button
+                      onClick={() => { onToggleLayoutGuide(); setShowSettingsMenu(false); }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                    >
+                      {showLayoutGuide ? '✓ ' : ''}Show Layout Guide
+                    </button>
+                    <button
+                      onClick={() => { onToggleOptimizeForScreen(); setShowSettingsMenu(false); }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                    >
+                      {optimizeForScreen ? '✓ ' : ''}Optimize for Screen
+                    </button>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold">ALIGNMENT</div>
+                    {[
+                      { value: 'left', label: 'Left' },
+                      { value: 'center', label: 'Center' },
+                      { value: 'right', label: 'Right' }
+                    ].map(align => (
+                      <button
+                        key={align.value}
+                        onClick={() => { onAlignmentChange(align.value); setShowSettingsMenu(false); }}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-100 text-sm ${alignment === align.value ? 'bg-blue-50 text-blue-600' : ''}`}
+                      >
+                        {alignment === align.value ? '✓ ' : ''}{align.label}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -590,6 +780,89 @@ x. x.. % %`;
         isOpen={showUserGuide}
         onClose={() => setShowUserGuide(false)}
       />
+
+      {/* Export Setlist Dialog */}
+      {showExportSetlistDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">Export Setlist</h2>
+              <button
+                onClick={() => {
+                  setShowExportSetlistDialog(false);
+                  setSelectedSetlistIds([]);
+                }}
+                className="text-gray-400 hover:text-gray-600 text-3xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Select one or more setlists to export:
+              </p>
+              <div className="space-y-2">
+                {availableSetlists.map(setlist => (
+                  <label
+                    key={setlist.id}
+                    className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedSetlistIds.includes(setlist.id)}
+                      onChange={() => toggleSetlistSelection(setlist.id)}
+                      className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 mr-3"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-800">
+                        📋 {setlist.name}
+                        {setlist.isDefault && (
+                          <span className="ml-2 text-sm text-gray-500">(Default)</span>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {setlistChartCounts[setlist.id] || 0} {setlistChartCounts[setlist.id] === 1 ? 'song' : 'songs'}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+              <div className="text-sm text-gray-600">
+                {selectedSetlistIds.length > 0 ? (
+                  <span>{selectedSetlistIds.length} setlist{selectedSetlistIds.length > 1 ? 's' : ''} selected</span>
+                ) : (
+                  <span>No setlists selected</span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowExportSetlistDialog(false);
+                    setSelectedSetlistIds([]);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmExportSetlist}
+                  disabled={selectedSetlistIds.length === 0}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Export
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

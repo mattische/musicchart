@@ -9,7 +9,7 @@ export default function NavigationMarkerDisplay({ marker }: NavigationMarkerDisp
   if (marker.type === 'segno') {
     return (
       <div className="flex justify-center items-start my-2">
-        <span className="text-2xl font-bold text-gray-900" style={{ lineHeight: '1' }}>
+        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100 print:text-gray-900" style={{ lineHeight: '1' }}>
           §
         </span>
       </div>
@@ -19,7 +19,7 @@ export default function NavigationMarkerDisplay({ marker }: NavigationMarkerDisp
   if (marker.type === 'coda') {
     return (
       <div className="flex justify-center items-start my-2">
-        <span className="text-2xl font-bold text-gray-900" style={{ lineHeight: '1' }}>
+        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100 print:text-gray-900" style={{ lineHeight: '1' }}>
           ⊕
         </span>
       </div>
@@ -52,8 +52,8 @@ export default function NavigationMarkerDisplay({ marker }: NavigationMarkerDisp
 
   return (
     <div className="flex justify-center my-2">
-      <div className="inline-block bg-yellow-100 border border-yellow-400 rounded px-3 py-1">
-        <span className="text-sm font-semibold text-gray-900">
+      <div className="inline-block bg-yellow-100 dark:bg-yellow-900 print:bg-yellow-100 border border-yellow-400 dark:border-yellow-600 print:border-yellow-400 rounded px-3 py-1">
+        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 print:text-gray-900">
           {getMarkerText()}
         </span>
       </div>

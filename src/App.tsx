@@ -8,12 +8,19 @@ import ChordTextEditor from './components/ChordTextEditor';
 import PrintHeader from './components/PrintHeader';
 import SetlistView from './components/SetlistView';
 import SaveChartDialog from './components/SaveChartDialog';
+import LayoutGuide from './components/LayoutGuide';
 
 function App() {
   const [nashvilleMode, setNashvilleMode] = useState(true);
   const [twoColumnLayout, setTwoColumnLayout] = useState(false);
   const [fitToPage, setFitToPage] = useState(true); // Default to true
   const [fontSize, setFontSize] = useState('normal');
+  const [fontFamily, setFontFamily] = useState(() => localStorage.getItem('fontFamily') || 'inter');
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+  const [alignment, setAlignment] = useState(() => localStorage.getItem('alignment') || 'left');
+  const [showLayoutGuide, setShowLayoutGuide] = useState(false);
+  const [optimizeForScreen, setOptimizeForScreen] = useState(() => localStorage.getItem('optimizeForScreen') === 'true');
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const [openSetlist, setOpenSetlist] = useState<Setlist | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [song, setSong] = useState<Song>({
@@ -45,6 +52,57 @@ function App() {
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const autoSaveStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+
+  // Persist font family to localStorage
+  useEffect(() => {
+    localStorage.setItem('fontFamily', fontFamily);
+  }, [fontFamily]);
+
+  // Persist dark mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('darkMode', darkMode.toString());
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // Persist alignment to localStorage
+  useEffect(() => {
+    localStorage.setItem('alignment', alignment);
+  }, [alignment]);
+
+  // Persist optimize for screen to localStorage
+  useEffect(() => {
+    localStorage.setItem('optimizeForScreen', optimizeForScreen.toString());
+  }, [optimizeForScreen]);
+
+  // Track screen width for optimization
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Prevent horizontal scroll when optimizeForScreen is enabled
+  useEffect(() => {
+    if (optimizeForScreen) {
+      document.body.style.overflowX = 'hidden';
+      document.documentElement.style.overflowX = 'hidden';
+    } else {
+      document.body.style.overflowX = '';
+      document.documentElement.style.overflowX = '';
+    }
+
+    return () => {
+      document.body.style.overflowX = '';
+      document.documentElement.style.overflowX = '';
+    };
+  }, [optimizeForScreen]);
 
   // Auto-save when song changes (debounced)
   useEffect(() => {
@@ -156,9 +214,29 @@ function App() {
     }
   };
 
+  // Get font family style
+  const getFontFamilyStyle = () => {
+    switch (fontFamily) {
+      case 'inter': return { fontFamily: 'Inter, sans-serif' };
+      case 'roboto': return { fontFamily: 'Roboto, sans-serif' };
+      case 'opensans': return { fontFamily: '"Open Sans", sans-serif' };
+      case 'lato': return { fontFamily: 'Lato, sans-serif' };
+      case 'system': return { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' };
+      default: return { fontFamily: 'Inter, sans-serif' };
+    }
+  };
+
+  // Get optimal max width based on screen optimization
+  const getOptimalMaxWidth = () => {
+    if (!optimizeForScreen) return '1920px';
+
+    // Use 100% to fit within screen, overflow is hidden on parent
+    return '100%';
+  };
+
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} ${optimizeForScreen ? 'overflow-x-hidden' : ''}`} style={getFontFamilyStyle()}>
         <NewToolbar
           nashvilleMode={nashvilleMode}
           onToggleMode={() => setNashvilleMode(!nashvilleMode)}
@@ -168,6 +246,16 @@ function App() {
           onToggleFitToPage={() => setFitToPage(!fitToPage)}
           fontSize={fontSize}
           onFontSizeChange={setFontSize}
+          fontFamily={fontFamily}
+          onFontFamilyChange={setFontFamily}
+          darkMode={darkMode}
+          onToggleDarkMode={() => setDarkMode(!darkMode)}
+          alignment={alignment}
+          onAlignmentChange={setAlignment}
+          showLayoutGuide={showLayoutGuide}
+          onToggleLayoutGuide={() => setShowLayoutGuide(!showLayoutGuide)}
+          optimizeForScreen={optimizeForScreen}
+          onToggleOptimizeForScreen={() => setOptimizeForScreen(!optimizeForScreen)}
           song={song}
           onNewSong={() => {
             setSong({
@@ -187,7 +275,7 @@ function App() {
           onOpenSetlist={setOpenSetlist}
         />
 
-        <div className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">
+        <div className={`mx-auto ${optimizeForScreen ? 'p-2 sm:p-4' : 'p-6'} print:p-0 print:max-w-none`} style={{ maxWidth: getOptimalMaxWidth() }}>
           <PrintHeader metadata={song.metadata} />
 
           {/* Save button with status indicator */}
@@ -224,6 +312,7 @@ function App() {
               twoColumnLayout={twoColumnLayout}
               fitToPage={fitToPage}
               fontSize={fontSize}
+              alignment={alignment}
               onUpdate={updateSong}
             />
           </div>
@@ -240,6 +329,10 @@ function App() {
         twoColumnLayout={twoColumnLayout}
         fitToPage={fitToPage}
         fontSize={fontSize}
+        alignment={alignment}
+        fontFamily={fontFamily}
+        darkMode={darkMode}
+        optimizeForScreen={optimizeForScreen}
       />
 
       {/* Save Chart Dialog */}
@@ -252,6 +345,9 @@ function App() {
           setShowSaveDialog(false);
         }}
       />
+
+      {/* Layout Guide Overlay */}
+      <LayoutGuide isVisible={showLayoutGuide} />
     </>
   );
 }

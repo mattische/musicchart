@@ -4,8 +4,16 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'inter': ['Inter', 'sans-serif'],
+        'roboto': ['Roboto', 'sans-serif'],
+        'opensans': ['Open Sans', 'sans-serif'],
+        'lato': ['Lato', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 }

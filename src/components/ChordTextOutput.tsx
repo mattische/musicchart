@@ -8,6 +8,7 @@ interface ChordTextOutputProps {
   twoColumnLayout?: boolean;
   fitToPage?: boolean;
   fontSize?: string;
+  alignment?: string;
 }
 
 const getFontSizeClass = (size: string) => {
@@ -100,15 +101,23 @@ const splitMeasureLinesForTwoColumn = (
   return result;
 };
 
-export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout = false, fontSize = 'normal' }: ChordTextOutputProps) {
+export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout = false, fontSize = 'normal', alignment = 'left' }: ChordTextOutputProps) {
   const fontClass = getFontSizeClass(fontSize);
   const hasMetadata = song.metadata.title || song.metadata.tempo || song.metadata.timeSignature ||
                       song.metadata.style || song.metadata.feel ||
                       (song.metadata.customProperties && Object.keys(song.metadata.customProperties).length > 0);
 
+  const getAlignmentClass = () => {
+    switch (alignment) {
+      case 'center': return 'mx-auto';
+      case 'right': return 'ml-auto';
+      default: return 'mr-auto';
+    }
+  };
+
   if (song.sections.length === 0) {
     return (
-      <div className="text-gray-400 italic text-center py-12">
+      <div className="text-gray-400 dark:text-gray-500 italic text-center py-12">
         Start typing to see your chart...
       </div>
     );
@@ -122,13 +131,13 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
       <div className="mb-2 pb-1 border-b border-gray-300 print:hidden">
         {song.metadata.title && (
           <div className="flex items-center justify-center gap-2 mb-1">
-            <h1 className="text-lg font-bold text-gray-900">{song.metadata.title}</h1>
-            <span className="inline-flex items-center justify-center px-2 py-0.5 border border-black rounded-full text-sm font-extrabold text-gray-900">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 print:text-gray-900">{song.metadata.title}</h1>
+            <span className="inline-flex items-center justify-center px-2 py-0.5 border border-black dark:border-white print:border-black rounded-full text-sm font-extrabold text-gray-900 dark:text-gray-100 print:text-gray-900">
               {song.metadata.key}
             </span>
           </div>
         )}
-        <div className="flex gap-2 text-xs text-gray-700 flex-wrap justify-center print:text-xs print:gap-1">
+        <div className="flex gap-2 text-xs text-gray-700 dark:text-gray-300 print:text-gray-700 flex-wrap justify-center print:text-xs print:gap-1">
           {song.metadata.tempo && (
             <div>
               <strong className="font-semibold">Tempo:</strong> <span className="ml-1">{song.metadata.tempo} BPM</span>
@@ -174,28 +183,30 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
       : [];
 
     return (
-      <div key={section.id} className="pb-1 mb-1 space-y-0.5 border-b border-gray-300 avoid-page-break print:space-y-1 print:pb-2 print:mb-2 print:border-gray-400">
-        {/* Section Name - only show if not a default section */}
-        {!isDefaultSection && (
-          <div className="mb-0.5">
-            <h3 className={`${fontClass} font-normal text-gray-900 inline-block`}>
-              {section.name}
-            </h3>
+      <div key={section.id} className="pb-1 mb-1 avoid-page-break print:pb-2 print:mb-2" style={{ borderBottom: '0.5px solid #d1d5db' }}>
+        {/* Section layout: name in left column, chords in right column */}
+        <div className="flex gap-3">
+          {/* Section Name Column - fixed width that scales with font size */}
+          <div className={`flex-shrink-0 pr-2 ${fontSize === 'small' ? 'w-12' : fontSize === 'big' ? 'w-20' : fontSize === 'medium' ? 'w-16' : 'w-14'}`}>
+            {!isDefaultSection && (
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 break-words leading-tight">
+                {section.name}
+              </h3>
+            )}
           </div>
-        )}
 
-        {/* Measure lines - each line from input on its own row */}
-        <div className="space-y-1.5">
+          {/* Measure lines */}
+          <div className="flex-1 space-y-1.5">
           {processedLines.length > 0 ? (
             processedLines.map((line, lineIdx) => (
               <div key={line.id} className="flex items-start gap-2">
                 {/* Line number */}
-                <span className="text-xs text-gray-400 w-4 mt-1">{lineIdx + 1}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500 print:text-gray-400 w-4 mt-1">{lineIdx + 1}</span>
 
                 {/* Repeat notation wrapper */}
                 <div className="flex items-end gap-2">
                   {line.isRepeat && (
-                    <span className="text-gray-700 text-4xl self-end leading-none" style={{ fontFamily: "'Noto Music', sans-serif" }}>
+                    <span className="text-gray-700 dark:text-gray-300 print:text-gray-700 text-4xl self-end leading-none" style={{ fontFamily: "'Noto Music', sans-serif" }}>
                       𝄆
                     </span>
                   )}
@@ -211,24 +222,24 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                           <>
                             {/* Inline meter change */}
                             {measure.meterChange && (
-                              <span className="text-sm text-gray-600 font-semibold self-center mr-1">
+                              <span className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-600 font-semibold self-center mr-1">
                                 [{measure.meterChange}]
                               </span>
                             )}
 
                             {/* Multi-measure repeat */}
                             {measure.isRepeat && measure.repeatCount ? (
-                              <div className="flex flex-col items-center border border-gray-400 rounded px-3 py-2">
-                                <span className="text-xl font-bold text-gray-700">%</span>
+                              <div className="flex flex-col items-center border border-gray-400 dark:border-gray-500 print:border-gray-400 rounded px-3 py-2">
+                                <span className="text-xl font-bold text-gray-700 dark:text-gray-300 print:text-gray-700">%</span>
                                 {measure.repeatCount > 1 && (
-                                  <span className="text-xs text-gray-500">×{measure.repeatCount}</span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 print:text-gray-500">×{measure.repeatCount}</span>
                                 )}
                               </div>
                             ) : (
                               <>
                                 {/* Pipe separator - only if explicitly marked */}
                                 {measure.showPipeBefore && (
-                                  <span className="text-gray-400 text-2xl font-thin mx-2">|</span>
+                                  <span className="text-gray-400 dark:text-gray-500 print:text-gray-400 text-2xl font-thin mx-2">|</span>
                                 )}
 
                                 {/* Measure content - with optional tie (split bar) styling */}
@@ -237,14 +248,14 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                                     <>
                                       {/* Render ending circle BEFORE parenthesis for split bars */}
                                       {measure.isSplitBar && measure.chords[0]?.ending && !measure.chords[0]?.number.includes('_') && (
-                                        <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-extrabold text-black self-end mb-1 mr-1">
+                                        <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black dark:border-white print:border-black rounded-full text-xs font-extrabold text-black dark:text-white print:text-black self-end mb-1 mr-1">
                                           {measure.chords[0].ending}
                                         </span>
                                       )}
                                       {/* Render left parenthesis */}
                                       {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
                                         <span
-                                          className={`text-black font-semibold ${fontClass} self-end mb-1`}
+                                          className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`}
                                           style={{ transform: 'scaleX(0.7)' }}
                                         >(</span>
                                       )}
@@ -262,20 +273,20 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                                         />
                                       ))}
                                       {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                                        <span className={`text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
+                                        <span className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
                                       )}
                                       {measure.comment && (
-                                        <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
+                                        <span className="text-gray-600 dark:text-gray-400 print:text-gray-600 text-sm font-normal self-center ml-2 italic">
                                           {measure.comment}
                                         </span>
                                       )}
                                     </>
                                   ) : measure.comment ? (
-                                    <span className="text-gray-600 text-sm font-normal italic">
+                                    <span className="text-gray-600 dark:text-gray-400 print:text-gray-600 text-sm font-normal italic">
                                       {measure.comment}
                                     </span>
                                   ) : (
-                                    <span className="text-gray-300 text-sm italic">—</span>
+                                    <span className="text-gray-300 dark:text-gray-600 print:text-gray-300 text-sm italic">—</span>
                                   )}
                                 </div>
                               </>
@@ -289,11 +300,11 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                   {line.isRepeat && (
                     <div className="flex flex-col items-center self-end">
                       {line.repeatMultiplier && (
-                        <span className="text-sm text-gray-700 font-bold mb-1">
+                        <span className="text-sm text-gray-700 dark:text-gray-300 print:text-gray-700 font-bold mb-1">
                           {line.repeatMultiplier}×
                         </span>
                       )}
-                      <span className="text-gray-700 text-4xl leading-none" style={{ fontFamily: "'Noto Music', sans-serif" }}>
+                      <span className="text-gray-700 dark:text-gray-300 print:text-gray-700 text-4xl leading-none" style={{ fontFamily: "'Noto Music', sans-serif" }}>
                         𝄇
                       </span>
                     </div>
@@ -309,20 +320,20 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                   <NavigationMarkerDisplay marker={measure.navigationMarker} />
                 ) : (
                   <>
-                    <span className="text-xs text-gray-400 w-6">{idx + 1}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 print:text-gray-400 w-6">{idx + 1}</span>
                     <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
                       {measure.chords.length > 0 ? (
                         <>
                           {/* Render ending circle BEFORE parenthesis for split bars */}
                           {measure.isSplitBar && measure.chords[0]?.ending && !measure.chords[0]?.number.includes('_') && (
-                            <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-extrabold text-black self-end mb-1 mr-1">
+                            <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black dark:border-white print:border-black rounded-full text-xs font-extrabold text-black dark:text-white print:text-black self-end mb-1 mr-1">
                               {measure.chords[0].ending}
                             </span>
                           )}
                           {/* Render left parenthesis */}
                           {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
                             <span
-                              className={`text-black font-semibold ${fontClass} self-end mb-1`}
+                              className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`}
                               style={{ transform: 'scaleX(0.7)' }}
                             >(</span>
                           )}
@@ -340,20 +351,20 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                             />
                           ))}
                           {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                            <span className={`text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
+                            <span className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
                           )}
                           {measure.comment && (
-                            <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
+                            <span className="text-gray-600 dark:text-gray-400 print:text-gray-600 text-sm font-normal self-center ml-2 italic">
                               {measure.comment}
                             </span>
                           )}
                         </>
                       ) : measure.comment ? (
-                        <span className="text-gray-600 text-sm font-normal italic">
+                        <span className="text-gray-600 dark:text-gray-400 print:text-gray-600 text-sm font-normal italic">
                           {measure.comment}
                         </span>
                       ) : (
-                        <span className="text-gray-300 text-sm italic">—</span>
+                        <span className="text-gray-300 dark:text-gray-600 print:text-gray-300 text-sm italic">—</span>
                       )}
                     </div>
                   </>
@@ -361,6 +372,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
               </div>
             ))
           )}
+          </div>
         </div>
       </div>
     );
@@ -382,11 +394,11 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
     return (
       <>
         <MetadataDisplay />
-        <div className="grid grid-cols-2 gap-8 print:gap-6">
+        <div className={`grid grid-cols-2 gap-8 print:gap-6 ${getAlignmentClass()} max-w-fit`}>
           <div>
             {renderSectionsWithPageBreaks(leftSections)}
           </div>
-          <div className="border-l-2 border-gray-300 pl-8 print:pl-6 print:border-gray-400">
+          <div>
             {renderSectionsWithPageBreaks(rightSections)}
           </div>
         </div>
@@ -398,7 +410,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
   return (
     <>
       <MetadataDisplay />
-      <div>
+      <div className={`${getAlignmentClass()} max-w-fit`}>
         {renderSectionsWithPageBreaks(song.sections)}
       </div>
     </>

@@ -16,6 +16,10 @@ interface SetlistViewProps {
   twoColumnLayout: boolean;
   fitToPage: boolean;
   fontSize: string;
+  alignment: string;
+  fontFamily: string;
+  darkMode: boolean;
+  optimizeForScreen: boolean;
 }
 
 export default function SetlistView({
@@ -26,7 +30,11 @@ export default function SetlistView({
   nashvilleMode,
   twoColumnLayout,
   fitToPage,
-  fontSize
+  fontSize,
+  alignment,
+  fontFamily,
+  darkMode,
+  optimizeForScreen
 }: SetlistViewProps) {
   const [charts, setCharts] = useState<Song[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -43,13 +51,40 @@ export default function SetlistView({
   const [showSongListOverlay, setShowSongListOverlay] = useState(false);
   const [liveFontSize, setLiveFontSize] = useState<string>(fontSize);
   const [liveTwoColumn, setLiveTwoColumn] = useState<boolean>(twoColumnLayout);
+  const [liveFontFamily, setLiveFontFamily] = useState<string>(fontFamily);
+  const [liveAlignment, setLiveAlignment] = useState<string>(alignment);
+  const [liveFitToPage, setLiveFitToPage] = useState<boolean>(fitToPage);
+  const [liveDarkMode, setLiveDarkMode] = useState<boolean>(darkMode);
+  const [liveOptimizeForScreen, setLiveOptimizeForScreen] = useState<boolean>(optimizeForScreen);
   const wakeLockRef = useRef<any>(null);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
   // Update live settings when props change
   useEffect(() => {
     setLiveFontSize(fontSize);
     setLiveTwoColumn(twoColumnLayout);
-  }, [fontSize, twoColumnLayout]);
+    setLiveFontFamily(fontFamily);
+    setLiveAlignment(alignment);
+    setLiveFitToPage(fitToPage);
+    setLiveDarkMode(darkMode);
+    setLiveOptimizeForScreen(optimizeForScreen);
+  }, [fontSize, twoColumnLayout, fontFamily, alignment, fitToPage, darkMode, optimizeForScreen]);
+
+  // Prevent horizontal scroll when optimizeForScreen is enabled
+  useEffect(() => {
+    if (liveOptimizeForScreen && isOpen) {
+      document.body.style.overflowX = 'hidden';
+      document.documentElement.style.overflowX = 'hidden';
+    } else {
+      document.body.style.overflowX = '';
+      document.documentElement.style.overflowX = '';
+    }
+
+    return () => {
+      document.body.style.overflowX = '';
+      document.documentElement.style.overflowX = '';
+    };
+  }, [liveOptimizeForScreen, isOpen]);
 
   // Screen Wake Lock - prevent screen from sleeping in Live Mode
   useEffect(() => {
@@ -326,8 +361,20 @@ export default function SetlistView({
     }
   };
 
+  // Get font family style
+  const getFontFamilyStyle = () => {
+    switch (liveFontFamily) {
+      case 'inter': return { fontFamily: 'Inter, sans-serif' };
+      case 'roboto': return { fontFamily: 'Roboto, sans-serif' };
+      case 'opensans': return { fontFamily: '"Open Sans", sans-serif' };
+      case 'lato': return { fontFamily: 'Lato, sans-serif' };
+      case 'system': return { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' };
+      default: return { fontFamily: 'Inter, sans-serif' };
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-gray-50 z-50 flex flex-col">
+    <div className={`fixed inset-0 ${liveDarkMode ? 'bg-gray-900' : 'bg-gray-50'} z-50 flex flex-col`} style={getFontFamilyStyle()}>
       {/* Header/Navigation Bar */}
       <div className={`bg-gray-800 text-white shadow-lg no-print transition-all duration-300 ${
         isLiveMode && !showControls ? 'h-0 overflow-hidden' : ''
@@ -359,6 +406,91 @@ export default function SetlistView({
                 ≡
               </button>
             )}
+
+            {/* Settings - Available in both Live and Edit Mode */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+                className="px-3 sm:px-3 py-2 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm sm:text-sm"
+                title="Settings"
+              >
+                ⚙️
+              </button>
+              {showSettingsMenu && (
+                <div className="absolute top-full left-0 mt-1 bg-white text-gray-800 rounded-lg shadow-lg py-1 z-50 min-w-[200px] max-h-[80vh] overflow-y-auto">
+                      <div className="px-4 py-2 text-xs text-gray-500 font-semibold">APPEARANCE</div>
+                      <button
+                        onClick={() => { setLiveDarkMode(!liveDarkMode); }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                      >
+                        {liveDarkMode ? '✓ Dark Mode' : 'Light Mode'}
+                      </button>
+                      <div className="border-t border-gray-200 my-1"></div>
+                      <div className="px-4 py-2 text-xs text-gray-500 font-semibold">FONT FAMILY</div>
+                      {[
+                        { value: 'inter', label: 'Inter' },
+                        { value: 'roboto', label: 'Roboto' },
+                        { value: 'opensans', label: 'Open Sans' },
+                        { value: 'lato', label: 'Lato' },
+                        { value: 'system', label: 'System Default' }
+                      ].map(font => (
+                        <button
+                          key={font.value}
+                          onClick={() => { setLiveFontFamily(font.value); }}
+                          className={`w-full px-4 py-2 text-left hover:bg-gray-100 text-sm ${liveFontFamily === font.value ? 'bg-blue-50 text-blue-600' : ''}`}
+                        >
+                          {liveFontFamily === font.value ? '✓ ' : ''}{font.label}
+                        </button>
+                      ))}
+                      <div className="border-t border-gray-200 my-1"></div>
+                      <div className="px-4 py-2 text-xs text-gray-500 font-semibold">FONT SIZE</div>
+                      {['small', 'normal', 'medium', 'big'].map(size => (
+                        <button
+                          key={size}
+                          onClick={() => { setLiveFontSize(size); }}
+                          className={`w-full px-4 py-2 text-left hover:bg-gray-100 text-sm ${liveFontSize === size ? 'bg-blue-50 text-blue-600' : ''}`}
+                        >
+                          {size === liveFontSize ? '✓ ' : ''}{size.charAt(0).toUpperCase() + size.slice(1)}
+                        </button>
+                      ))}
+                      <div className="border-t border-gray-200 my-1"></div>
+                      <div className="px-4 py-2 text-xs text-gray-500 font-semibold">LAYOUT</div>
+                      <button
+                        onClick={() => { setLiveTwoColumn(!liveTwoColumn); }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                      >
+                        {liveTwoColumn ? '✓ ' : ''}Two Column Layout
+                      </button>
+                      <button
+                        onClick={() => { setLiveFitToPage(!liveFitToPage); }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                      >
+                        {liveFitToPage ? '✓ ' : ''}Fit to Page
+                      </button>
+                      <button
+                        onClick={() => { setLiveOptimizeForScreen(!liveOptimizeForScreen); }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                      >
+                        {liveOptimizeForScreen ? '✓ ' : ''}Optimize for Screen
+                      </button>
+                      <div className="border-t border-gray-200 my-1"></div>
+                      <div className="px-4 py-2 text-xs text-gray-500 font-semibold">ALIGNMENT</div>
+                      {[
+                        { value: 'left', label: 'Left' },
+                        { value: 'center', label: 'Center' },
+                        { value: 'right', label: 'Right' }
+                      ].map(align => (
+                        <button
+                          key={align.value}
+                          onClick={() => { setLiveAlignment(align.value); }}
+                          className={`w-full px-4 py-2 text-left hover:bg-gray-100 text-sm ${liveAlignment === align.value ? 'bg-blue-50 text-blue-600' : ''}`}
+                        >
+                          {liveAlignment === align.value ? '✓ ' : ''}{align.label}
+                        </button>
+                      ))}
+                </div>
+              )}
+            </div>
 
             {/* Mode Toggle - visible on mobile in top row */}
             <div className="flex sm:hidden items-center bg-gray-700 rounded-lg overflow-hidden">
@@ -623,14 +755,15 @@ export default function SetlistView({
             <div className={`max-w-7xl mx-auto print:max-w-none ${showControls ? 'p-2 sm:p-3' : 'p-0'} print:p-0`}>
             <PrintHeader metadata={currentSong.metadata} />
 
-            <div className={`${showControls ? 'mt-2 sm:mt-3' : 'mt-0'} print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
-              <div className={`bg-white ${showControls ? 'rounded-lg shadow-md p-2 sm:p-3' : 'p-4'} print:shadow-none print:p-0`}>
+            <div className={`${showControls ? 'mt-2 sm:mt-3' : 'mt-0'} print:mt-4 ${liveFitToPage ? 'print-fit-to-page' : ''}`}>
+              <div className={`${liveDarkMode ? 'bg-gray-800' : 'bg-white'} ${showControls ? 'rounded-lg shadow-md p-2 sm:p-3' : 'p-4'} print:shadow-none print:p-0 print:bg-white`}>
                 <ChordTextOutput
                   song={currentSong}
                   nashvilleMode={nashvilleMode}
-                  twoColumnLayout={isLiveMode ? liveTwoColumn : twoColumnLayout}
-                  fitToPage={fitToPage}
-                  fontSize={isLiveMode ? liveFontSize : fontSize}
+                  twoColumnLayout={liveTwoColumn}
+                  fitToPage={liveFitToPage}
+                  fontSize={liveFontSize}
+                  alignment={liveAlignment}
                 />
               </div>
             </div>
@@ -641,13 +774,14 @@ export default function SetlistView({
             {/* Edit Mode - Editor + Preview */}
             <PrintHeader metadata={currentSong.metadata} />
 
-            <div className={`mt-8 print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
+            <div className={`mt-8 print:mt-4 ${liveFitToPage ? 'print-fit-to-page' : ''}`}>
               <ChordTextEditor
                 song={currentSong}
                 nashvilleMode={nashvilleMode}
-                twoColumnLayout={twoColumnLayout}
-                fitToPage={fitToPage}
-                fontSize={fontSize}
+                twoColumnLayout={liveTwoColumn}
+                fitToPage={liveFitToPage}
+                fontSize={liveFontSize}
+                alignment={liveAlignment}
                 onUpdate={handleUpdateSong}
               />
             </div>

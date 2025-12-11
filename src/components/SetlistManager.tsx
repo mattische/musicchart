@@ -21,6 +21,7 @@ interface SetlistManagerProps {
 
 export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: SetlistManagerProps) {
   const [setlists, setSetlists] = useState<Setlist[]>([]);
+  const [setlistChartCounts, setSetlistChartCounts] = useState<Record<string, number>>({});
   const [editingSetlist, setEditingSetlist] = useState<Setlist | null>(null);
   const [editingCharts, setEditingCharts] = useState<Song[]>([]);
   const [editingName, setEditingName] = useState('');
@@ -40,6 +41,14 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
   const loadSetlists = async () => {
     const all = await getAllSetlists();
     setSetlists(all);
+
+    // Load chart counts for each setlist
+    const counts: Record<string, number> = {};
+    for (const setlist of all) {
+      const charts = await getChartsInSetlist(setlist.id);
+      counts[setlist.id] = charts.length;
+    }
+    setSetlistChartCounts(counts);
   };
 
   const handleEditSetlist = async (setlist: Setlist) => {
@@ -442,12 +451,15 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
                 <div>
-                  <span className="text-lg font-medium text-gray-800">
+                  <div className="text-lg font-medium text-gray-800">
                     📋 {setlist.name}
                     {setlist.isDefault && (
                       <span className="ml-2 text-sm text-gray-500">(Default)</span>
                     )}
-                  </span>
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {setlistChartCounts[setlist.id] || 0} {setlistChartCounts[setlist.id] === 1 ? 'song' : 'songs'}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button
