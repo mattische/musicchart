@@ -150,8 +150,8 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     <div className={`relative inline-flex flex-col items-center min-w-[16px] ${chord.ending ? 'ml-8' : ''}`}>
       {/* Fermata above chord */}
       {chord.fermata && (
-        <div className="flex justify-center mb-0.5">
-          <span className="text-2xl text-black" style={{ fontFamily: "'Noto Music', sans-serif" }}>𝄐</span>
+        <div className="flex justify-center mb-0">
+          <span className="text-2xl text-black leading-none" style={{ fontFamily: "'Noto Music', sans-serif" }}>𝄐</span>
         </div>
       )}
 

@@ -1,5 +1,6 @@
 import { Song, MeasureLine } from '../types/song';
 import ChordDisplay from './ChordDisplay';
+import NavigationMarkerDisplay from './NavigationMarkerDisplay';
 
 interface ChordTextOutputProps {
   song: Song;
@@ -120,12 +121,14 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
     return (
       <div className="mb-2 pb-1 border-b border-gray-300 print:hidden">
         {song.metadata.title && (
-          <h1 className="text-lg font-bold text-gray-900 mb-1">{song.metadata.title}</h1>
-        )}
-        <div className="flex gap-2 text-xs text-gray-700 flex-wrap print:text-xs print:gap-1">
-          <div>
-            <strong className="font-semibold">Key:</strong> <span className="ml-1">{song.metadata.key}</span>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <h1 className="text-lg font-bold text-gray-900">{song.metadata.title}</h1>
+            <span className="inline-flex items-center justify-center px-2 py-0.5 border border-black rounded-full text-sm font-extrabold text-gray-900">
+              {song.metadata.key}
+            </span>
           </div>
+        )}
+        <div className="flex gap-2 text-xs text-gray-700 flex-wrap justify-center print:text-xs print:gap-1">
           {song.metadata.tempo && (
             <div>
               <strong className="font-semibold">Tempo:</strong> <span className="ml-1">{song.metadata.tempo} BPM</span>
@@ -201,75 +204,82 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                   <div className="flex gap-1 items-end">
                     {line.measures.map((measure) => (
                       <div key={measure.id} className="flex gap-0.5 items-end">
-                        {/* Inline meter change */}
-                        {measure.meterChange && (
-                          <span className="text-sm text-gray-600 font-semibold self-center mr-1">
-                            [{measure.meterChange}]
-                          </span>
-                        )}
-
-                        {/* Multi-measure repeat */}
-                        {measure.isRepeat && measure.repeatCount ? (
-                          <div className="flex flex-col items-center border border-gray-400 rounded px-3 py-2">
-                            <span className="text-xl font-bold text-gray-700">%</span>
-                            {measure.repeatCount > 1 && (
-                              <span className="text-xs text-gray-500">×{measure.repeatCount}</span>
-                            )}
-                          </div>
+                        {/* Navigation Marker */}
+                        {measure.navigationMarker ? (
+                          <NavigationMarkerDisplay marker={measure.navigationMarker} />
                         ) : (
                           <>
-                            {/* Pipe separator - only if explicitly marked */}
-                            {measure.showPipeBefore && (
-                              <span className="text-gray-400 text-2xl font-thin mx-2">|</span>
+                            {/* Inline meter change */}
+                            {measure.meterChange && (
+                              <span className="text-sm text-gray-600 font-semibold self-center mr-1">
+                                [{measure.meterChange}]
+                              </span>
                             )}
 
-                            {/* Measure content - with optional tie (split bar) styling */}
-                            <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
-                              {measure.chords.length > 0 ? (
-                                <>
-                                  {/* Render ending circle BEFORE parenthesis for split bars */}
-                                  {measure.isSplitBar && measure.chords[0]?.ending && !measure.chords[0]?.number.includes('_') && (
-                                    <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-extrabold text-black self-end mb-1 mr-1">
-                                      {measure.chords[0].ending}
-                                    </span>
-                                  )}
-                                  {/* Render left parenthesis */}
-                                  {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                                    <span
-                                      className={`text-black font-semibold ${fontClass} self-end mb-1`}
-                                      style={{ transform: 'scaleX(0.7)' }}
-                                    >(</span>
-                                  )}
-                                  {measure.chords.map((chord, chordIdx) => (
-                                    <ChordDisplay
-                                      key={chord.id}
-                                      chord={{
-                                        ...chord,
-                                        // Don't render ending in ChordDisplay if it's first chord in split bar (already rendered above)
-                                        ending: (chordIdx === 0 && measure.isSplitBar && !chord.number.includes('_')) ? undefined : chord.ending
-                                      }}
-                                      nashvilleMode={nashvilleMode}
-                                      songKey={song.metadata.key}
-                                      fontSize={fontClass}
-                                    />
-                                  ))}
-                                  {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                                    <span className={`text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
-                                  )}
-                                  {measure.comment && (
-                                    <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
+                            {/* Multi-measure repeat */}
+                            {measure.isRepeat && measure.repeatCount ? (
+                              <div className="flex flex-col items-center border border-gray-400 rounded px-3 py-2">
+                                <span className="text-xl font-bold text-gray-700">%</span>
+                                {measure.repeatCount > 1 && (
+                                  <span className="text-xs text-gray-500">×{measure.repeatCount}</span>
+                                )}
+                              </div>
+                            ) : (
+                              <>
+                                {/* Pipe separator - only if explicitly marked */}
+                                {measure.showPipeBefore && (
+                                  <span className="text-gray-400 text-2xl font-thin mx-2">|</span>
+                                )}
+
+                                {/* Measure content - with optional tie (split bar) styling */}
+                                <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
+                                  {measure.chords.length > 0 ? (
+                                    <>
+                                      {/* Render ending circle BEFORE parenthesis for split bars */}
+                                      {measure.isSplitBar && measure.chords[0]?.ending && !measure.chords[0]?.number.includes('_') && (
+                                        <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-extrabold text-black self-end mb-1 mr-1">
+                                          {measure.chords[0].ending}
+                                        </span>
+                                      )}
+                                      {/* Render left parenthesis */}
+                                      {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
+                                        <span
+                                          className={`text-black font-semibold ${fontClass} self-end mb-1`}
+                                          style={{ transform: 'scaleX(0.7)' }}
+                                        >(</span>
+                                      )}
+                                      {measure.chords.map((chord, chordIdx) => (
+                                        <ChordDisplay
+                                          key={chord.id}
+                                          chord={{
+                                            ...chord,
+                                            // Don't render ending in ChordDisplay if it's first chord in split bar (already rendered above)
+                                            ending: (chordIdx === 0 && measure.isSplitBar && !chord.number.includes('_')) ? undefined : chord.ending
+                                          }}
+                                          nashvilleMode={nashvilleMode}
+                                          songKey={song.metadata.key}
+                                          fontSize={fontClass}
+                                        />
+                                      ))}
+                                      {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
+                                        <span className={`text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
+                                      )}
+                                      {measure.comment && (
+                                        <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
+                                          {measure.comment}
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : measure.comment ? (
+                                    <span className="text-gray-600 text-sm font-normal italic">
                                       {measure.comment}
                                     </span>
+                                  ) : (
+                                    <span className="text-gray-300 text-sm italic">—</span>
                                   )}
-                                </>
-                              ) : measure.comment ? (
-                                <span className="text-gray-600 text-sm font-normal italic">
-                                  {measure.comment}
-                                </span>
-                              ) : (
-                                <span className="text-gray-300 text-sm italic">—</span>
-                              )}
-                            </div>
+                                </div>
+                              </>
+                            )}
                           </>
                         )}
                       </div>
@@ -295,53 +305,59 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
             // Fallback to old format if no measureLines
             section.measures.map((measure, idx) => (
               <div key={measure.id} className="flex items-center gap-4">
-                <span className="text-xs text-gray-400 w-6">{idx + 1}</span>
-                <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
-                  {measure.chords.length > 0 ? (
-                    <>
-                      {/* Render ending circle BEFORE parenthesis for split bars */}
-                      {measure.isSplitBar && measure.chords[0]?.ending && !measure.chords[0]?.number.includes('_') && (
-                        <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-extrabold text-black self-end mb-1 mr-1">
-                          {measure.chords[0].ending}
-                        </span>
-                      )}
-                      {/* Render left parenthesis */}
-                      {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                        <span
-                          className={`text-black font-semibold ${fontClass} self-end mb-1`}
-                          style={{ transform: 'scaleX(0.7)' }}
-                        >(</span>
-                      )}
-                      {measure.chords.map((chord, chordIdx) => (
-                        <ChordDisplay
-                          key={chord.id}
-                          chord={{
-                            ...chord,
-                            // Don't render ending in ChordDisplay if it's first chord in split bar (already rendered above)
-                            ending: (chordIdx === 0 && measure.isSplitBar && !chord.number.includes('_')) ? undefined : chord.ending
-                          }}
-                          nashvilleMode={nashvilleMode}
-                          songKey={song.metadata.key}
-                          fontSize={fontClass}
-                        />
-                      ))}
-                      {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                        <span className={`text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
-                      )}
-                      {measure.comment && (
-                        <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
+                {measure.navigationMarker ? (
+                  <NavigationMarkerDisplay marker={measure.navigationMarker} />
+                ) : (
+                  <>
+                    <span className="text-xs text-gray-400 w-6">{idx + 1}</span>
+                    <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
+                      {measure.chords.length > 0 ? (
+                        <>
+                          {/* Render ending circle BEFORE parenthesis for split bars */}
+                          {measure.isSplitBar && measure.chords[0]?.ending && !measure.chords[0]?.number.includes('_') && (
+                            <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-xs font-extrabold text-black self-end mb-1 mr-1">
+                              {measure.chords[0].ending}
+                            </span>
+                          )}
+                          {/* Render left parenthesis */}
+                          {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
+                            <span
+                              className={`text-black font-semibold ${fontClass} self-end mb-1`}
+                              style={{ transform: 'scaleX(0.7)' }}
+                            >(</span>
+                          )}
+                          {measure.chords.map((chord, chordIdx) => (
+                            <ChordDisplay
+                              key={chord.id}
+                              chord={{
+                                ...chord,
+                                // Don't render ending in ChordDisplay if it's first chord in split bar (already rendered above)
+                                ending: (chordIdx === 0 && measure.isSplitBar && !chord.number.includes('_')) ? undefined : chord.ending
+                              }}
+                              nashvilleMode={nashvilleMode}
+                              songKey={song.metadata.key}
+                              fontSize={fontClass}
+                            />
+                          ))}
+                          {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
+                            <span className={`text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
+                          )}
+                          {measure.comment && (
+                            <span className="text-gray-600 text-sm font-normal self-center ml-2 italic">
+                              {measure.comment}
+                            </span>
+                          )}
+                        </>
+                      ) : measure.comment ? (
+                        <span className="text-gray-600 text-sm font-normal italic">
                           {measure.comment}
                         </span>
+                      ) : (
+                        <span className="text-gray-300 text-sm italic">—</span>
                       )}
-                    </>
-                  ) : measure.comment ? (
-                    <span className="text-gray-600 text-sm font-normal italic">
-                      {measure.comment}
-                    </span>
-                  ) : (
-                    <span className="text-gray-300 text-sm italic">—</span>
-                  )}
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
             ))
           )}

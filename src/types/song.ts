@@ -6,6 +6,23 @@ export interface NoteAnnotation {
   triplet?: boolean;
 }
 
+export type NavigationMarkerType =
+  | 'segno'           // § symbol only
+  | 'coda'            // ⊕ symbol only
+  | 'ds'              // D.S. (text in yellow box)
+  | 'ds-al-fine'      // D.S. al Fine (text in yellow box)
+  | 'ds-al-coda'      // D.S. al Coda (text in yellow box)
+  | 'dc'              // D.C. (text in yellow box)
+  | 'dc-al-fine'      // D.C. al Fine (text in yellow box)
+  | 'dc-al-coda'      // D.C. al Coda (text in yellow box)
+  | 'fine'            // Fine (text in yellow box)
+  | 'to-coda';        // To Coda (text in yellow box)
+
+export interface NavigationMarker {
+  type: NavigationMarkerType;
+  text?: string; // Optional custom text override
+}
+
 export interface Chord {
   id: string;
   number: string; // "1", "2", "3-", "4sus4", "#5", "b7", etc.
@@ -34,6 +51,7 @@ export interface Measure {
   meterChange?: string; // Inline meter change (e.g., "3/8")
   isRepeat?: boolean; // Multi-measure repeat (%, %%, etc.)
   repeatCount?: number; // Number of measures to repeat (1-8)
+  navigationMarker?: NavigationMarker; // Navigation marker (D.S., Coda, etc.)
 }
 
 export interface MeasureLine {

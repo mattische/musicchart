@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 import ChartLibrary from './ChartLibrary';
 import SetlistManager from './SetlistManager';
 import SaveChartDialog from './SaveChartDialog';
+import UserGuideModal from './UserGuideModal';
 import { exportAllData, importData, createSetlist } from '../db/operations';
 
 interface ToolbarProps {
@@ -18,7 +19,7 @@ interface ToolbarProps {
   onToggleFitToPage: () => void;
   song: Song;
   onNewSong: () => void;
-  onLoadFile: (text: string) => void;
+  onLoadFile: (text: string, specialId?: string) => void;
   onLoadChart: (chart: Song) => void;
   onChartSaved: (chartId: string) => void;
   onOpenSetlist: (setlist: Setlist) => void;
@@ -44,9 +45,11 @@ export default function NewToolbar({
 }: ToolbarProps) {
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showHelpMenu, setShowHelpMenu] = useState(false);
   const [showChartLibrary, setShowChartLibrary] = useState(false);
   const [showSetlistManager, setShowSetlistManager] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showUserGuide, setShowUserGuide] = useState(false);
 
   const handleLoadFromFile = () => {
     setShowFileMenu(false);
@@ -247,6 +250,122 @@ export default function NewToolbar({
     input.click();
   };
 
+  const handleShowSyntax = () => {
+    setShowHelpMenu(false);
+    const syntaxChart = `Title: Syntax Reference
+Key: C
+Tempo: 120
+Meter: 4/4
+
+// Basic Chords
+1 2 3 4
+5 6 7 1
+
+// Chord Qualities
+1M 1m 1+ 1°
+17 1M7 1m7 1sus4
+
+// Accidentals (write before the chord)
+1 #2 b3 ##4
+bb5 #6 b7 1
+
+// Repeats
+||: 1 2 3 4 :||
+|: 5 6 7 1 :|
+
+// Repeat Symbols
+1 2 % %
+5 6 % %
+
+// Split Bars
+[(1 2)] [(3 4)]
+[(5 6)] [(7 1)]
+
+// Endings - simple
+1[(1. 4 )] 2[(2. 5 )]
+||: 1 2 3[(1. 4 )] 5[(2. 1 )] :||
+
+// Endings - with different content
+1[ 1 2 3 4 ] 2[ 4 3 2 1 ]
+||: 1M7 2m7 3[(1. 4M7 5 )] 6[(2. 1M7 )] :||
+
+// Rests
+1 x x 4
+5 X 7 1
+
+// Rest with Dots
+1 x. x.. 4
+5 X. 7. 1
+
+// Note Values (q=quarter, h=half, w=whole, e=eighth, s=sixteenth)
+1q 2h 3w 4e
+1s 2q 3h 4w
+
+// Push/Anticipation (< or >)
+1 <2 3 >4
+<5 6 >7 1
+
+// Walkup and Walkdown
+1 2@wu 3 4
+5 6@wd 7 1
+
+// Diamond Chords
+1 <2> 3 <4>
+<5> 6 <7> 1
+
+// Fermata (hold)
+1 2~ 3 4
+5 6 7~ 1
+
+// Modulation
+||: 1 2 3 4 :||
+<D>mod+2
+||: 1 2 3 4 :||
+
+// Navigation Markers - Symbols (rendered as large symbols)
+§
+⊕
+
+// Navigation Markers - Text (rendered in yellow boxes)
+D.S.
+D.S. al Fine
+D.S. al Coda
+D.C.
+D.C. al Fine
+D.C. al Coda
+Fine
+To Coda
+
+// How Navigation Markers Work:
+// § (Segno) - Marks the place to return to when "D.S." is encountered
+// ⊕ (Coda) - Marks the coda section (ending)
+// D.S. (Dal Segno) - Jump back to the § symbol
+// D.S. al Fine - Jump to § and play until "Fine"
+// D.S. al Coda - Jump to §, play until "To Coda", then jump to ⊕
+// D.C. (Da Capo) - Jump back to the beginning
+// D.C. al Fine - Jump to beginning and play until "Fine"
+// D.C. al Coda - Jump to beginning, play until "To Coda", then jump to ⊕
+// Fine - Marks the end point
+// To Coda - Marks where to jump to the coda (⊕)
+
+// Separators
+1 2 3 4
+* 5 6 7 1
+
+// Complex Example
+||: 1M7 2m7 3m7 4M7 :||
+5[(1. 67 )] <1>[(2. 1M7 )]
+* 1@ 2@w <3> #4m7
+x. x.. % %`;
+
+    onLoadFile(syntaxChart, 'help-syntax');
+  };
+
+  const handleShowUserGuide = () => {
+    setShowHelpMenu(false);
+    setShowUserGuide(true);
+  };
+
   return (
     <>
       <div className="bg-gray-800 text-white shadow-lg no-print">
@@ -263,6 +382,7 @@ export default function NewToolbar({
                   onClick={() => {
                     setShowFileMenu(!showFileMenu);
                     setShowSettingsMenu(false);
+                    setShowHelpMenu(false);
                   }}
                   className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
                 >
@@ -339,11 +459,42 @@ export default function NewToolbar({
                   setShowSetlistManager(true);
                   setShowFileMenu(false);
                   setShowSettingsMenu(false);
+                  setShowHelpMenu(false);
                 }}
                 className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
               >
                 🎵 Setlists
               </button>
+
+              {/* Help Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setShowHelpMenu(!showHelpMenu);
+                    setShowFileMenu(false);
+                    setShowSettingsMenu(false);
+                  }}
+                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
+                >
+                  ❓ Help
+                </button>
+                {showHelpMenu && (
+                  <div className="absolute top-full right-0 mt-1 bg-white text-gray-800 rounded-lg shadow-lg py-1 z-50 min-w-[200px]">
+                    <button
+                      onClick={handleShowSyntax}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                    >
+                      Syntax Reference
+                    </button>
+                    <button
+                      onClick={handleShowUserGuide}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 text-sm"
+                    >
+                      User Guide
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Settings Menu */}
               <div className="relative">
@@ -351,6 +502,7 @@ export default function NewToolbar({
                   onClick={() => {
                     setShowSettingsMenu(!showSettingsMenu);
                     setShowFileMenu(false);
+                    setShowHelpMenu(false);
                   }}
                   className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-sm"
                 >
@@ -432,6 +584,11 @@ export default function NewToolbar({
         song={song}
         onClose={() => setShowSaveDialog(false)}
         onSaved={onChartSaved}
+      />
+
+      <UserGuideModal
+        isOpen={showUserGuide}
+        onClose={() => setShowUserGuide(false)}
       />
     </>
   );

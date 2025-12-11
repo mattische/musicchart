@@ -1,4 +1,4 @@
-import { Chord, Section, Measure, SongMetadata } from '../types/song';
+import { Chord, Section, Measure, SongMetadata, NavigationMarker, NavigationMarkerType } from '../types/song';
 
 export interface ParsedLine {
   type: 'section' | 'measures' | 'empty' | 'metadata';
@@ -10,6 +10,53 @@ export interface ParsedLine {
 export interface ParseResult {
   sections: Section[];
   metadata?: Partial<SongMetadata>;
+}
+
+/**
+ * Try to parse a line as a navigation marker
+ * Returns NavigationMarker if successful, null otherwise
+ */
+function parseNavigationMarker(line: string): NavigationMarker | null {
+  const trimmed = line.trim();
+
+  // Check for exact matches (case-insensitive)
+  const upper = trimmed.toUpperCase();
+
+  // Symbol markers
+  if (trimmed === '§' || upper === 'SEGNO') {
+    return { type: 'segno' };
+  }
+  if (trimmed === '⊕' || upper === 'CODA') {
+    return { type: 'coda' };
+  }
+
+  // Text markers
+  if (upper === 'D.S.' || upper === 'DS') {
+    return { type: 'ds' };
+  }
+  if (upper === 'D.S. AL FINE' || upper === 'DS AL FINE') {
+    return { type: 'ds-al-fine' };
+  }
+  if (upper === 'D.S. AL CODA' || upper === 'DS AL CODA') {
+    return { type: 'ds-al-coda' };
+  }
+  if (upper === 'D.C.' || upper === 'DC') {
+    return { type: 'dc' };
+  }
+  if (upper === 'D.C. AL FINE' || upper === 'DC AL FINE') {
+    return { type: 'dc-al-fine' };
+  }
+  if (upper === 'D.C. AL CODA' || upper === 'DC AL CODA') {
+    return { type: 'dc-al-coda' };
+  }
+  if (upper === 'FINE') {
+    return { type: 'fine' };
+  }
+  if (upper === 'TO CODA' || upper === 'TO ⊕') {
+    return { type: 'to-coda' };
+  }
+
+  return null;
 }
 
 /**
@@ -231,6 +278,19 @@ function parseMeasureLine(line: string, nashvilleMode: boolean): {
   isRepeat?: boolean;
   repeatMultiplier?: number;
 } {
+  // Check if this line is a navigation marker
+  const navMarker = parseNavigationMarker(line);
+  if (navMarker) {
+    return {
+      measures: [{
+        id: `measure-nav-${Date.now()}`,
+        chords: [],
+        rawText: line,
+        navigationMarker: navMarker,
+      }],
+    };
+  }
+
   // Check for repeat notation: ||: :|| or ||: :||{4}
   const repeatMatch = line.match(/^\|\|:\s*(.*?)\s*:\|\|(\{(\d+)\})?$/);
   if (repeatMatch) {

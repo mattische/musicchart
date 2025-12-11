@@ -53,8 +53,8 @@ function App() {
       clearTimeout(autoSaveTimeoutRef.current);
     }
 
-    // Only auto-save if it's a saved chart (not a new chart)
-    const isSavedChart = song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-');
+    // Only auto-save if it's a saved chart (not a new chart, loaded chart, or help chart)
+    const isSavedChart = song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-') && !song.id.startsWith('help-');
 
     if (isSavedChart) {
       setAutoSaveStatus('saving');
@@ -96,7 +96,7 @@ function App() {
     }
 
     saveTimeoutRef.current = setTimeout(async () => {
-      if (updatedSong.id && !updatedSong.id.startsWith('new-') && !updatedSong.id.startsWith('loaded-')) {
+      if (updatedSong.id && !updatedSong.id.startsWith('new-') && !updatedSong.id.startsWith('loaded-') && !updatedSong.id.startsWith('help-')) {
         try {
           await saveChart(updatedSong);
           console.log('Auto-saved chart:', updatedSong.metadata.title);
@@ -107,10 +107,10 @@ function App() {
     }, 1000);
   };
 
-  const handleLoadFile = (text: string) => {
+  const handleLoadFile = (text: string, specialId?: string) => {
     const result = parseChordTextWithMetadata(text, nashvilleMode);
     setSong({
-      id: `loaded-${Date.now()}`,
+      id: specialId || `loaded-${Date.now()}`,
       metadata: {
         title: result.metadata?.title || 'Untitled',
         key: result.metadata?.key || 'C',
@@ -191,29 +191,31 @@ function App() {
           <PrintHeader metadata={song.metadata} />
 
           {/* Save button with status indicator */}
-          <div className="no-print flex justify-end mb-2">
-            <button
-              onClick={handleManualSave}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                autoSaveStatus === 'saving'
-                  ? 'bg-yellow-500 text-white cursor-wait'
+          {!song.id.startsWith('help-') && (
+            <div className="no-print flex justify-end mb-2">
+              <button
+                onClick={handleManualSave}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  autoSaveStatus === 'saving'
+                    ? 'bg-yellow-500 text-white cursor-wait'
+                    : autoSaveStatus === 'saved'
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-')
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                }`}
+                disabled={autoSaveStatus === 'saving'}
+              >
+                {autoSaveStatus === 'saving'
+                  ? '💾 Sparar...'
                   : autoSaveStatus === 'saved'
-                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  ? '✓ Sparad'
                   : song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-')
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-purple-600 text-white hover:bg-purple-700'
-              }`}
-              disabled={autoSaveStatus === 'saving'}
-            >
-              {autoSaveStatus === 'saving'
-                ? '💾 Sparar...'
-                : autoSaveStatus === 'saved'
-                ? '✓ Sparad'
-                : song.id && !song.id.startsWith('new-') && !song.id.startsWith('loaded-')
-                ? '💾 Spara'
-                : '💾 Spara som...'}
-            </button>
-          </div>
+                  ? '💾 Spara'
+                  : '💾 Spara som...'}
+              </button>
+            </div>
+          )}
 
           <div className={`mt-8 print:mt-4 ${fitToPage ? 'print-fit-to-page' : ''}`}>
             <ChordTextEditor

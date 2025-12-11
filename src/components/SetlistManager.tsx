@@ -3,6 +3,7 @@ import { Song } from '../types/song';
 import { Setlist } from '../db/database';
 import {
   getAllSetlists,
+  createSetlist,
   updateSetlist,
   deleteSetlist,
   getChartsInSetlist,
@@ -27,6 +28,8 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
   const [availableCharts, setAvailableCharts] = useState<Song[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [showCreateNew, setShowCreateNew] = useState(false);
+  const [newSetlistName, setNewSetlistName] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -96,6 +99,18 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
     if (!confirm(`Delete setlist "${setlist.name}"?`)) return;
 
     await deleteSetlist(setlist.id);
+    await loadSetlists();
+  };
+
+  const handleCreateNewSetlist = async () => {
+    if (!newSetlistName.trim()) {
+      alert('Please enter a name for the new setlist');
+      return;
+    }
+
+    await createSetlist(newSetlistName.trim());
+    setNewSetlistName('');
+    setShowCreateNew(false);
     await loadSetlists();
   };
 
@@ -370,6 +385,56 @@ export default function SetlistManager({ isOpen, onClose, onOpenSetlist }: Setli
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
+          {/* Create New Setlist Section */}
+          <div className="mb-6">
+            {!showCreateNew ? (
+              <button
+                onClick={() => setShowCreateNew(true)}
+                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="text-xl">+</span>
+                <span>Create New Setlist</span>
+              </button>
+            ) : (
+              <div className="border-2 border-blue-500 rounded-lg p-4 bg-blue-50">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Setlist Name
+                </label>
+                <input
+                  type="text"
+                  value={newSetlistName}
+                  onChange={(e) => setNewSetlistName(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleCreateNewSetlist();
+                    }
+                  }}
+                  placeholder="Enter setlist name..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCreateNewSetlist}
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Create
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCreateNew(false);
+                      setNewSetlistName('');
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Existing Setlists */}
           <div className="space-y-3">
             {setlists.map(setlist => (
               <div
