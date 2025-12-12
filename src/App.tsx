@@ -20,7 +20,6 @@ function App() {
   const [alignment, setAlignment] = useState(() => localStorage.getItem('alignment') || 'left');
   const [showLayoutGuide, setShowLayoutGuide] = useState(false);
   const [optimizeForScreen, setOptimizeForScreen] = useState(() => localStorage.getItem('optimizeForScreen') === 'true');
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const [openSetlist, setOpenSetlist] = useState<Setlist | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [song, setSong] = useState<Song>({
@@ -77,16 +76,6 @@ function App() {
   useEffect(() => {
     localStorage.setItem('optimizeForScreen', optimizeForScreen.toString());
   }, [optimizeForScreen]);
-
-  // Track screen width for optimization
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Prevent horizontal scroll when optimizeForScreen is enabled
   useEffect(() => {

@@ -70,6 +70,26 @@ export default function SetlistView({
     setLiveOptimizeForScreen(optimizeForScreen);
   }, [fontSize, twoColumnLayout, fontFamily, alignment, fitToPage, darkMode, optimizeForScreen]);
 
+  // Apply dark mode class to document element
+  useEffect(() => {
+    if (isOpen && liveDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else if (isOpen && !liveDarkMode) {
+      document.documentElement.classList.remove('dark');
+    }
+
+    return () => {
+      // Restore original dark mode state when closing setlist
+      if (!isOpen) {
+        if (darkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    };
+  }, [liveDarkMode, isOpen, darkMode]);
+
   // Prevent horizontal scroll when optimizeForScreen is enabled
   useEffect(() => {
     if (liveOptimizeForScreen && isOpen) {
@@ -374,7 +394,7 @@ export default function SetlistView({
   };
 
   return (
-    <div className={`fixed inset-0 ${liveDarkMode ? 'bg-gray-900' : 'bg-gray-50'} z-50 flex flex-col`} style={getFontFamilyStyle()}>
+    <div className={`fixed inset-0 ${liveDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'} z-50 flex flex-col`} style={getFontFamilyStyle()}>
       {/* Header/Navigation Bar */}
       <div className={`bg-gray-800 text-white shadow-lg no-print transition-all duration-300 ${
         isLiveMode && !showControls ? 'h-0 overflow-hidden' : ''
@@ -756,7 +776,7 @@ export default function SetlistView({
             <PrintHeader metadata={currentSong.metadata} />
 
             <div className={`${showControls ? 'mt-2 sm:mt-3' : 'mt-0'} print:mt-4 ${liveFitToPage ? 'print-fit-to-page' : ''}`}>
-              <div className={`${liveDarkMode ? 'bg-gray-800' : 'bg-white'} ${showControls ? 'rounded-lg shadow-md p-2 sm:p-3' : 'p-4'} print:shadow-none print:p-0 print:bg-white`}>
+              <div className={`${liveDarkMode ? 'dark bg-gray-800' : 'bg-white'} ${showControls ? 'rounded-lg shadow-md p-2 sm:p-3' : 'p-4'} print:shadow-none print:p-0 print:bg-white`}>
                 <ChordTextOutput
                   song={currentSong}
                   nashvilleMode={nashvilleMode}
