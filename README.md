@@ -9,13 +9,9 @@ Using the Nashville Number System with JotChord syntax.
 - PDF export
 - A cli tool to generate charts from txt to pdf
 
-## TODO
-- handle <5>_<5> correctly, a tie
-- handle 5._5q - show quarternote above the last chord
-- 1._X._1_X. - show dots/lines over each chord/rest
-- 1._x.._<1><mod+2> - show the modulation correctly
-- 1_5@wd show walk-down/walk-up arrows correctly in a tie
-- maybe show ties with (12) instead of underline?
+## TODO/wishlist
+- metronome (visual)
+- better rendering of diamonds and ties
 
 
 ## Installation, use locally
