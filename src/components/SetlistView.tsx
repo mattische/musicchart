@@ -326,15 +326,16 @@ export default function SetlistView({
   };
 
   const increaseFontSize = () => {
-    const sizes = ['xs', 'tiny', 'small', 'normal', 'medium', 'big'];
+    const sizes = ['xs', 'tiny', 'small', 'normal', 'medium', 'big', 'huge', 'giant', 'massive', 'colossal', 'enormous', 'gigantic'];
     const currentIndex = sizes.indexOf(liveFontSize);
+    console.log(`[Live Mode] Increase font: current="${liveFontSize}" (index ${currentIndex}) → next="${sizes[currentIndex + 1]}"`);
     if (currentIndex < sizes.length - 1) {
       setLiveFontSize(sizes[currentIndex + 1]);
     }
   };
 
   const decreaseFontSize = () => {
-    const sizes = ['xs', 'tiny', 'small', 'normal', 'medium', 'big'];
+    const sizes = ['xs', 'tiny', 'small', 'normal', 'medium', 'big', 'huge', 'giant', 'massive', 'colossal', 'enormous', 'gigantic'];
     const currentIndex = sizes.indexOf(liveFontSize);
     if (currentIndex > 0) {
       setLiveFontSize(sizes[currentIndex - 1]);

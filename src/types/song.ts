@@ -39,6 +39,8 @@ export interface Chord {
   fermata?: boolean; // Fermata (~)
   isRest?: boolean; // No chord (X)
   inlineComment?: string; // Inline comment (1/*text*/)
+  inParentheses?: boolean; // Whether this chord was inside parentheses
+  parenthesesGroupId?: number; // Which parentheses group this chord belongs to
 }
 
 export interface Measure {

@@ -544,6 +544,7 @@ function parseChords(text: string, nashvilleMode: boolean): { chords: Chord[]; i
 
   const chords: Chord[] = [];
   let isSplitBar = false;
+  let parenthesesGroupCounter = 0;
 
   const tokens = smartTokenize(text);
 
@@ -554,8 +555,12 @@ function parseChords(text: string, nashvilleMode: boolean): { chords: Chord[]; i
     if (token.startsWith('//')) return;
 
     // Check for split bars and expand them
-    const { chords: expandedChords, wasSplitBar } = expandSplitBar(token, nashvilleMode);
-    if (wasSplitBar) isSplitBar = true;
+    const { chords: expandedChords, wasSplitBar } = expandSplitBar(token, nashvilleMode, parenthesesGroupCounter);
+    if (wasSplitBar) {
+      isSplitBar = true;
+      // Increment counter for next parentheses group
+      parenthesesGroupCounter++;
+    }
 
     expandedChords.forEach((chord, subIndex) => {
       chord.id = `chord-${Date.now()}-${index}-${subIndex}`;
@@ -814,7 +819,7 @@ function parseNextCompleteChord(text: string, nashvilleMode: boolean): { chord: 
  * Also handles endings: "1[2 4 5]" -> [2, 4, 5] with ending=1
  * Returns {chords, wasSplitBar} to indicate if this was a tie
  */
-function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[]; wasSplitBar: boolean } {
+function expandSplitBar(token: string, nashvilleMode: boolean, parenthesesGroupId: number = 0): { chords: Chord[]; wasSplitBar: boolean } {
   // Handle endings: 1[2 4 5], 2[1 1 1], 2[(1 2 3)], etc.
   const endingMatch = token.match(/^(\d+)\[(.*)\]$/);
   if (endingMatch) {
@@ -822,15 +827,15 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
     const inner = endingMatch[2].trim();
 
     // Parse the inner content, which could include ties and complex tokens
-    const { chords, isSplitBar } = parseChords(inner, nashvilleMode);
+    const { chords } = parseChords(inner, nashvilleMode);
 
     // Add ending number only to the first chord
     if (chords.length > 0) {
       chords[0].ending = endingNumber;
     }
 
-    // Preserve the split bar flag from inner content (e.g., if inner is a tie)
-    return { chords, wasSplitBar: isSplitBar };
+    // Don't propagate isSplitBar for endings - individual chords have inParentheses flag
+    return { chords, wasSplitBar: false };
   }
 
   // Handle parenthesized ties: (1 4) or (1144) or (1.x..<1><mod+2>)
@@ -863,6 +868,9 @@ function expandSplitBar(token: string, nashvilleMode: boolean): { chords: Chord[
       // Try to parse a complete chord token with all modifiers
       const result = parseNextCompleteChord(remaining, nashvilleMode);
       if (result.chord) {
+        // Mark chord as being inside parentheses with unique group ID
+        result.chord.inParentheses = true;
+        result.chord.parenthesesGroupId = parenthesesGroupId;
         chords.push(result.chord);
         remaining = result.remaining;
       } else {

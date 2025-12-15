@@ -16,10 +16,54 @@ const getFontSizeClass = (size: string) => {
     case 'xs': return 'text-xs';
     case 'tiny': return 'text-sm';
     case 'small': return 'text-base';
-    case 'normal': return 'text-2xl';
-    case 'medium': return 'text-3xl';
-    case 'big': return 'text-4xl';
+    case 'normal': return 'text-2xl';           // 24px (1.5rem)
+    case 'medium': return 'text-[3rem]';        // 48px - 2x normal
+    case 'big': return 'text-[4.5rem]';         // 72px - 3x normal
+    case 'huge': return 'text-[6rem]';          // 96px - 4x normal
+    case 'giant': return 'text-[8rem]';         // 128px - 5.3x normal
+    case 'massive': return 'text-[10rem]';      // 160px - 6.7x normal
+    case 'colossal': return 'text-[13rem]';     // 208px - 8.7x normal
+    case 'enormous': return 'text-[16rem]';     // 256px - 10.7x normal
+    case 'gigantic': return 'text-[20rem]';     // 320px - 13.3x normal - MEGA!
     default: return 'text-2xl';
+  }
+};
+
+// Section name size - smaller than chords but still scales significantly
+const getSectionFontSizeClass = (size: string) => {
+  switch (size) {
+    case 'xs': return 'text-xs';
+    case 'tiny': return 'text-sm';
+    case 'small': return 'text-base';
+    case 'normal': return 'text-lg';
+    case 'medium': return 'text-2xl';
+    case 'big': return 'text-4xl';
+    case 'huge': return 'text-5xl';
+    case 'giant': return 'text-6xl';
+    case 'massive': return 'text-7xl';
+    case 'colossal': return 'text-8xl';
+    case 'enormous': return 'text-9xl';
+    case 'gigantic': return 'text-[10rem]';  // Very large but still smaller than chords
+    default: return 'text-lg';
+  }
+};
+
+// Comment size - smaller than chords and sections but still scales
+const getCommentFontSizeClass = (size: string) => {
+  switch (size) {
+    case 'xs': return 'text-xs';
+    case 'tiny': return 'text-xs';
+    case 'small': return 'text-sm';
+    case 'normal': return 'text-sm';
+    case 'medium': return 'text-base';
+    case 'big': return 'text-xl';
+    case 'huge': return 'text-2xl';
+    case 'giant': return 'text-3xl';
+    case 'massive': return 'text-4xl';
+    case 'colossal': return 'text-5xl';
+    case 'enormous': return 'text-6xl';
+    case 'gigantic': return 'text-7xl';  // Large but smaller than sections
+    default: return 'text-sm';
   }
 };
 
@@ -28,6 +72,44 @@ const isRealChord = (chord: any): boolean => {
   if (!chord || !chord.number) return false;
   // Separators and repeat symbols are not real chords
   return chord.number !== '*' && chord.number !== '%';
+};
+
+// Helper to group chords into chunks based on inParentheses flag and parenthesesGroupId
+// Returns an array of chunks, where each chunk has chords and a needsParentheses flag
+const groupChordsByParentheses = (chords: any[]): Array<{ chords: any[]; needsParentheses: boolean }> => {
+  const chunks: Array<{ chords: any[]; needsParentheses: boolean }> = [];
+  let currentChunk: any[] = [];
+  let currentNeedsParentheses = false;
+  let currentGroupId: number | undefined = undefined;
+
+  chords.forEach((chord, index) => {
+    const chordNeedsParentheses = chord.inParentheses === true;
+    const chordGroupId = chord.parenthesesGroupId;
+
+    // Start a new chunk if:
+    // 1. Parentheses status changed, OR
+    // 2. Group ID changed (different parentheses group)
+    if (index > 0 && (
+      chordNeedsParentheses !== currentNeedsParentheses ||
+      (chordNeedsParentheses && chordGroupId !== currentGroupId)
+    )) {
+      if (currentChunk.length > 0) {
+        chunks.push({ chords: currentChunk, needsParentheses: currentNeedsParentheses });
+        currentChunk = [];
+      }
+    }
+
+    currentNeedsParentheses = chordNeedsParentheses;
+    currentGroupId = chordGroupId;
+    currentChunk.push(chord);
+  });
+
+  // Add the last chunk
+  if (currentChunk.length > 0) {
+    chunks.push({ chords: currentChunk, needsParentheses: currentNeedsParentheses });
+  }
+
+  return chunks;
 };
 
 // Split measure lines into chunks of 4 real chords for two column mode
@@ -103,6 +185,8 @@ const splitMeasureLinesForTwoColumn = (
 
 export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout = false, fontSize = 'normal', alignment = 'left' }: ChordTextOutputProps) {
   const fontClass = getFontSizeClass(fontSize);
+  const sectionFontClass = getSectionFontSizeClass(fontSize);
+  const commentFontClass = getCommentFontSizeClass(fontSize);
   const hasMetadata = song.metadata.title || song.metadata.tempo || song.metadata.timeSignature ||
                       song.metadata.style || song.metadata.feel ||
                       (song.metadata.customProperties && Object.keys(song.metadata.customProperties).length > 0);
@@ -132,7 +216,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
         {song.metadata.title && (
           <div className="flex items-center justify-center gap-2 mb-1">
             <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 print:text-gray-900">{song.metadata.title}</h1>
-            <span className="inline-flex items-center justify-center px-2 py-0.5 border border-black dark:border-white print:border-black rounded-full text-sm font-extrabold text-gray-900 dark:text-gray-100 print:text-gray-900">
+            <span className="inline-flex items-center justify-center px-3 py-1 border-2 border-black dark:border-white print:border-black rounded-full text-lg font-black text-gray-900 dark:text-gray-100 print:text-gray-900">
               {song.metadata.key}
             </span>
           </div>
@@ -189,7 +273,7 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
           {/* Section Name Column - fixed width that scales with font size */}
           <div className={`flex-shrink-0 pr-2 ${fontSize === 'small' ? 'w-12' : fontSize === 'big' ? 'w-20' : fontSize === 'medium' ? 'w-16' : 'w-14'}`}>
             {!isDefaultSection && (
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 break-words leading-tight">
+              <h3 className={`${sectionFontClass} font-bold text-gray-700 dark:text-gray-300 break-words leading-tight`}>
                 {section.name}
               </h3>
             )}
@@ -246,47 +330,62 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                                 <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
                                   {measure.chords.length > 0 ? (
                                     <>
-                                      {/* Render ending circle BEFORE parenthesis for split bars */}
-                                      {measure.isSplitBar && measure.chords[0]?.ending && !measure.chords[0]?.number.includes('_') && (
-                                        <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black dark:border-white print:border-black rounded-full text-xs font-extrabold text-black dark:text-white print:text-black self-end mb-1 mr-1">
-                                          {measure.chords[0].ending}
-                                        </span>
-                                      )}
-                                      {/* Render left parenthesis */}
-                                      {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                                        <span
-                                          className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`}
-                                          style={{ transform: 'scaleX(0.7)' }}
-                                        >(</span>
-                                      )}
-                                      {measure.chords.map((chord, chordIdx) => (
-                                        <ChordDisplay
-                                          key={chord.id}
-                                          chord={{
-                                            ...chord,
-                                            // Don't render ending in ChordDisplay if it's first chord in split bar (already rendered above)
-                                            ending: (chordIdx === 0 && measure.isSplitBar && !chord.number.includes('_')) ? undefined : chord.ending
-                                          }}
-                                          nashvilleMode={nashvilleMode}
-                                          songKey={song.metadata.key}
-                                          fontSize={fontClass}
-                                        />
-                                      ))}
-                                      {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                                        <span className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
-                                      )}
+                                      {/* Group chords by parentheses and render each chunk */}
+                                      {groupChordsByParentheses(measure.chords).map((chunk, chunkIdx) => {
+                                        const isFirstChunk = chunkIdx === 0;
+                                        const shouldShowParentheses = chunk.needsParentheses && !chunk.chords[0]?.number.includes('_');
+                                        const shouldShowOldStyleParentheses = measure.isSplitBar && !chunk.chords.some(c => c.inParentheses !== undefined) && !chunk.chords[0]?.number.includes('_');
+
+                                        return (
+                                          <div key={chunkIdx} className={`flex items-end ${shouldShowParentheses || shouldShowOldStyleParentheses ? 'gap-0.5' : 'gap-1'}`}>
+                                            {/* Render ending circle BEFORE parenthesis - only for first chunk */}
+                                            {isFirstChunk && (shouldShowParentheses || shouldShowOldStyleParentheses) && chunk.chords[0]?.ending && (
+                                              <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black dark:border-white print:border-black rounded-full text-xs font-extrabold text-black dark:text-white print:text-black self-end mb-1 mr-1">
+                                                {chunk.chords[0].ending}
+                                              </span>
+                                            )}
+                                            {/* Render left parenthesis */}
+                                            {(shouldShowParentheses || shouldShowOldStyleParentheses) && (
+                                              <span
+                                                className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`}
+                                                style={{ transform: 'scaleX(0.7)' }}
+                                              >(</span>
+                                            )}
+                                            {chunk.chords.map((chord, chordIdx) => {
+                                              const isFirstChordInFirstChunk = isFirstChunk && chordIdx === 0;
+                                              return (
+                                                <ChordDisplay
+                                                  key={chord.id}
+                                                  chord={{
+                                                    ...chord,
+                                                    // Don't render ending in ChordDisplay if it's first chord and has parentheses
+                                                    ending: (isFirstChordInFirstChunk && (shouldShowParentheses || shouldShowOldStyleParentheses)) ? undefined : chord.ending
+                                                  }}
+                                                  nashvilleMode={nashvilleMode}
+                                                  songKey={song.metadata.key}
+                                                  fontSize={fontClass}
+                                                />
+                                              );
+                                            })}
+                                            {/* Render right parenthesis */}
+                                            {(shouldShowParentheses || shouldShowOldStyleParentheses) && (
+                                              <span className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
                                       {measure.comment && (
-                                        <span className="text-gray-600 dark:text-gray-400 print:text-gray-600 text-sm font-normal self-center ml-2 italic">
+                                        <span className={`text-gray-600 dark:text-gray-400 print:text-gray-600 ${commentFontClass} font-normal self-center ml-2 italic`}>
                                           {measure.comment}
                                         </span>
                                       )}
                                     </>
                                   ) : measure.comment ? (
-                                    <span className="text-gray-600 dark:text-gray-400 print:text-gray-600 text-sm font-normal italic">
+                                    <span className={`text-gray-600 dark:text-gray-400 print:text-gray-600 ${commentFontClass} font-normal italic`}>
                                       {measure.comment}
                                     </span>
                                   ) : (
-                                    <span className="text-gray-300 dark:text-gray-600 print:text-gray-300 text-sm italic">—</span>
+                                    <span className={`text-gray-300 dark:text-gray-600 print:text-gray-300 ${commentFontClass} italic`}>—</span>
                                   )}
                                 </div>
                               </>
@@ -324,47 +423,62 @@ export default function ChordTextOutput({ song, nashvilleMode, twoColumnLayout =
                     <div className={`flex items-end ${measure.isSplitBar ? 'gap-0.5' : 'gap-1'}`}>
                       {measure.chords.length > 0 ? (
                         <>
-                          {/* Render ending circle BEFORE parenthesis for split bars */}
-                          {measure.isSplitBar && measure.chords[0]?.ending && !measure.chords[0]?.number.includes('_') && (
-                            <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black dark:border-white print:border-black rounded-full text-xs font-extrabold text-black dark:text-white print:text-black self-end mb-1 mr-1">
-                              {measure.chords[0].ending}
-                            </span>
-                          )}
-                          {/* Render left parenthesis */}
-                          {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                            <span
-                              className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`}
-                              style={{ transform: 'scaleX(0.7)' }}
-                            >(</span>
-                          )}
-                          {measure.chords.map((chord, chordIdx) => (
-                            <ChordDisplay
-                              key={chord.id}
-                              chord={{
-                                ...chord,
-                                // Don't render ending in ChordDisplay if it's first chord in split bar (already rendered above)
-                                ending: (chordIdx === 0 && measure.isSplitBar && !chord.number.includes('_')) ? undefined : chord.ending
-                              }}
-                              nashvilleMode={nashvilleMode}
-                              songKey={song.metadata.key}
-                              fontSize={fontClass}
-                            />
-                          ))}
-                          {measure.isSplitBar && !measure.chords[0]?.number.includes('_') && (
-                            <span className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
-                          )}
+                          {/* Group chords by parentheses and render each chunk */}
+                          {groupChordsByParentheses(measure.chords).map((chunk, chunkIdx) => {
+                            const isFirstChunk = chunkIdx === 0;
+                            const shouldShowParentheses = chunk.needsParentheses && !chunk.chords[0]?.number.includes('_');
+                            const shouldShowOldStyleParentheses = measure.isSplitBar && !chunk.chords.some(c => c.inParentheses !== undefined) && !chunk.chords[0]?.number.includes('_');
+
+                            return (
+                              <div key={chunkIdx} className={`flex items-end ${shouldShowParentheses || shouldShowOldStyleParentheses ? 'gap-0.5' : 'gap-1'}`}>
+                                {/* Render ending circle BEFORE parenthesis - only for first chunk */}
+                                {isFirstChunk && (shouldShowParentheses || shouldShowOldStyleParentheses) && chunk.chords[0]?.ending && (
+                                  <span className="inline-flex items-center justify-center w-5 h-5 border-2 border-black dark:border-white print:border-black rounded-full text-xs font-extrabold text-black dark:text-white print:text-black self-end mb-1 mr-1">
+                                    {chunk.chords[0].ending}
+                                  </span>
+                                )}
+                                {/* Render left parenthesis */}
+                                {(shouldShowParentheses || shouldShowOldStyleParentheses) && (
+                                  <span
+                                    className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`}
+                                    style={{ transform: 'scaleX(0.7)' }}
+                                  >(</span>
+                                )}
+                                {chunk.chords.map((chord, chordIdx) => {
+                                  const isFirstChordInFirstChunk = isFirstChunk && chordIdx === 0;
+                                  return (
+                                    <ChordDisplay
+                                      key={chord.id}
+                                      chord={{
+                                        ...chord,
+                                        // Don't render ending in ChordDisplay if it's first chord and has parentheses
+                                        ending: (isFirstChordInFirstChunk && (shouldShowParentheses || shouldShowOldStyleParentheses)) ? undefined : chord.ending
+                                      }}
+                                      nashvilleMode={nashvilleMode}
+                                      songKey={song.metadata.key}
+                                      fontSize={fontClass}
+                                    />
+                                  );
+                                })}
+                                {/* Render right parenthesis */}
+                                {(shouldShowParentheses || shouldShowOldStyleParentheses) && (
+                                  <span className={`text-black dark:text-white print:text-black font-semibold ${fontClass} self-end mb-1`} style={{ transform: 'scaleX(0.7)' }}>)</span>
+                                )}
+                              </div>
+                            );
+                          })}
                           {measure.comment && (
-                            <span className="text-gray-600 dark:text-gray-400 print:text-gray-600 text-sm font-normal self-center ml-2 italic">
+                            <span className={`text-gray-600 dark:text-gray-400 print:text-gray-600 ${commentFontClass} font-normal self-center ml-2 italic`}>
                               {measure.comment}
                             </span>
                           )}
                         </>
                       ) : measure.comment ? (
-                        <span className="text-gray-600 dark:text-gray-400 print:text-gray-600 text-sm font-normal italic">
+                        <span className={`text-gray-600 dark:text-gray-400 print:text-gray-600 ${commentFontClass} font-normal italic`}>
                           {measure.comment}
                         </span>
                       ) : (
-                        <span className="text-gray-300 dark:text-gray-600 print:text-gray-300 text-sm italic">—</span>
+                        <span className={`text-gray-300 dark:text-gray-600 print:text-gray-300 ${commentFontClass} italic`}>—</span>
                       )}
                     </div>
                   </>

@@ -9,11 +9,63 @@ interface ChordDisplayProps {
 }
 
 export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize = 'text-2xl' }: ChordDisplayProps) {
+  // Get separator dot size based on font size
+  const getSeparatorSize = () => {
+    if (fontSize.includes('text-[20rem]')) return 'w-10 h-10';    // gigantic
+    if (fontSize.includes('text-[16rem]')) return 'w-8 h-8';      // enormous
+    if (fontSize.includes('text-[13rem]')) return 'w-7 h-7';      // colossal
+    if (fontSize.includes('text-[10rem]')) return 'w-6 h-6';      // massive
+    if (fontSize.includes('text-[8rem]')) return 'w-5 h-5';       // giant
+    if (fontSize.includes('text-[6rem]')) return 'w-4 h-4';       // huge
+    if (fontSize.includes('text-[4.5rem]')) return 'w-3.5 h-3.5'; // big
+    if (fontSize.includes('text-[3rem]')) return 'w-3 h-3';       // medium
+    return 'w-2 h-2';                                              // normal and below
+  };
+
+  // Get beat mark size based on font size
+  const getBeatMarkSize = () => {
+    if (fontSize.includes('text-[20rem]')) return { width: 'w-3', height: 'h-12' };     // gigantic
+    if (fontSize.includes('text-[16rem]')) return { width: 'w-2.5', height: 'h-10' };   // enormous
+    if (fontSize.includes('text-[13rem]')) return { width: 'w-2', height: 'h-8' };      // colossal
+    if (fontSize.includes('text-[10rem]')) return { width: 'w-1.5', height: 'h-7' };    // massive
+    if (fontSize.includes('text-[8rem]')) return { width: 'w-1.5', height: 'h-6' };     // giant
+    if (fontSize.includes('text-[6rem]')) return { width: 'w-1', height: 'h-5' };       // huge
+    if (fontSize.includes('text-[4.5rem]')) return { width: 'w-1', height: 'h-4' };     // big
+    if (fontSize.includes('text-[3rem]')) return { width: 'w-0.5', height: 'h-3' };     // medium
+    return { width: 'w-[2px]', height: 'h-2' };                                          // normal and below
+  };
+
+  // Get note value size based on font size
+  const getNoteValueSize = () => {
+    if (fontSize.includes('text-[20rem]')) return 'text-[12rem]';   // gigantic
+    if (fontSize.includes('text-[16rem]')) return 'text-[10rem]';   // enormous
+    if (fontSize.includes('text-[13rem]')) return 'text-[8rem]';    // colossal
+    if (fontSize.includes('text-[10rem]')) return 'text-[6rem]';    // massive
+    if (fontSize.includes('text-[8rem]')) return 'text-[5rem]';     // giant
+    if (fontSize.includes('text-[6rem]')) return 'text-[4rem]';     // huge
+    if (fontSize.includes('text-[4.5rem]')) return 'text-[3rem]';   // big
+    if (fontSize.includes('text-[3rem]')) return 'text-5xl';        // medium
+    return 'text-3xl';                                               // normal and below
+  };
+
+  // Get diamond size based on font size
+  const getDiamondSize = () => {
+    if (fontSize.includes('text-[20rem]')) return { box: 'w-[20rem] h-[20rem]', text: 'text-[14rem]' };  // gigantic
+    if (fontSize.includes('text-[16rem]')) return { box: 'w-[16rem] h-[16rem]', text: 'text-[11rem]' };  // enormous
+    if (fontSize.includes('text-[13rem]')) return { box: 'w-[13rem] h-[13rem]', text: 'text-[9rem]' };   // colossal
+    if (fontSize.includes('text-[10rem]')) return { box: 'w-[10rem] h-[10rem]', text: 'text-[7rem]' };   // massive
+    if (fontSize.includes('text-[8rem]')) return { box: 'w-[8rem] h-[8rem]', text: 'text-[5.5rem]' };    // giant
+    if (fontSize.includes('text-[6rem]')) return { box: 'w-[6rem] h-[6rem]', text: 'text-[4rem]' };      // huge
+    if (fontSize.includes('text-[4.5rem]')) return { box: 'w-[4.5rem] h-[4.5rem]', text: 'text-[3rem]' };// big
+    if (fontSize.includes('text-[3rem]')) return { box: 'w-[3rem] h-[3rem]', text: 'text-2xl' };         // medium
+    return { box: 'w-8 h-8', text: 'text-sm' };                                                           // normal and below
+  };
+
   // Handle separator (*)
   if (chord.number === '*') {
     return (
       <div className="relative inline-flex flex-col items-center justify-center min-w-[16px] self-end mb-3">
-        <div className="w-2 h-2 bg-black dark:bg-white rounded-full print:bg-black"></div>
+        <div className={`${getSeparatorSize()} bg-black dark:bg-white rounded-full print:bg-black`}></div>
       </div>
     );
   }
@@ -80,11 +132,12 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
   // Render beat marks above the chord (vertical lines)
   const renderBeats = () => {
     if (!chord.beats || chord.beats === 0) return null;
+    const beatSize = getBeatMarkSize();
 
     return (
       <div className="flex gap-0.5 justify-center mb-0.5">
         {Array.from({ length: chord.beats }).map((_, i) => (
-          <span key={i} className="inline-block w-[2px] h-2 bg-black dark:bg-white print:bg-black"></span>
+          <span key={i} className={`inline-block ${beatSize.width} ${beatSize.height} bg-black dark:bg-white print:bg-black`}></span>
         ))}
       </div>
     );
@@ -95,6 +148,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     if (!chord.annotation?.value) return null;
 
     const symbol = getNoteSymbol(chord.annotation.value);
+    const noteSize = getNoteValueSize();
     // More space above diamond chords
     const marginClass = chord.diamond ? 'mb-2' : 'mb-1';
 
@@ -120,7 +174,7 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
     return (
       <div className={`flex justify-center ${marginClass}`}>
         <span
-          className="text-3xl text-gray-700 dark:text-gray-300 print:text-gray-700 leading-none font-bold"
+          className={`${noteSize} text-gray-700 dark:text-gray-300 print:text-gray-700 leading-none font-bold`}
           style={{
             fontFamily: "'Noto Music', sans-serif",
             transform: getTransform(chord.annotation.value),
@@ -194,9 +248,9 @@ export default function ChordDisplay({ chord, nashvilleMode, songKey, fontSize =
         {/* Diamond (whole note) or regular chord */}
         {chord.diamond ? (
           <div className="inline-flex items-center">
-            <span className="inline-block relative w-8 h-8 align-baseline">
+            <span className={`inline-block relative ${getDiamondSize().box} align-baseline`}>
               <span className="absolute inset-0 border-2 border-black dark:border-white print:border-black bg-white dark:bg-gray-800 print:bg-white transform rotate-45"></span>
-              <span className="absolute inset-0 flex items-center justify-center text-sm text-black dark:text-white print:text-black z-10">
+              <span className={`absolute inset-0 flex items-center justify-center ${getDiamondSize().text} text-black dark:text-white print:text-black z-10`}>
                 {accidental && (
                   <span className="font-semibold italic mr-0.5" style={{ transform: 'scaleX(0.8)' }}>{accidental}</span>
                 )}
